@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,8 +18,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kododake.aabrowser.ui.compose.components.DynamicWallpaperBackground
+import com.kododake.aabrowser.R
+import com.kododake.aabrowser.ui.compose.components.bouncyClickable
 import com.kododake.aabrowser.ui.compose.theme.AABrowserTheme
 
 data class StartPageScreenCallbacks(
@@ -30,6 +33,10 @@ data class StartPageScreenCallbacks(
     val onUpdateSlot: (Int, String) -> Unit = { _, _ -> },
     val onOpenSlotUrl: (String) -> Unit = {},
     val onResumeClick: () -> Unit = {},
+    val onOpenBookmarks: () -> Unit = {},
+    val onOpenTabs: () -> Unit = {},
+    val onOpenMenu: () -> Unit = {},
+    val openTabCount: () -> Int = { 1 },
 )
 
 private data class ActiveSlotDialog(val index: Int, val url: String)
@@ -44,34 +51,24 @@ fun StartPageScreen(
     callbacks: StartPageScreenCallbacks = StartPageScreenCallbacks(),
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
     var activeSlotDialog by remember { mutableStateOf<ActiveSlotDialog?>(null) }
+    val dragState = rememberStartPageQuickLinksDragState(slots, callbacks.onMoveSlot)
 
-    AABrowserTheme {
+    AABrowserTheme(darkTheme = true) {
         Box(modifier = modifier.fillMaxSize()) {
-            DynamicWallpaperBackground(customBackgroundBitmap = customBackgroundBitmap)
+            BraveHomeBackground(customBackgroundBitmap = customBackgroundBitmap)
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                StartPageHeader(
-                    onNavigate = callbacks.onNavigate
-                )
+                BraveStartPageTopBar(onNavigate = callbacks.onNavigate)
 
                 Spacer(Modifier.height(12.dp))
 
-                StartPageHeroBanner(
-                    showHero = customBackgroundBitmap == null
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                StartPageQuickLinks(
+                BraveShortcutsPanel(
                     slots = slots,
+                    dragState = dragState,
                     onSlotClick = { index, url ->
                         if (url.isNullOrBlank()) {
                             callbacks.onSlotClick(index, url)
@@ -79,18 +76,42 @@ fun StartPageScreen(
                             activeSlotDialog = ActiveSlotDialog(index, url)
                         }
                     },
-                    onMoveSlot = callbacks.onMoveSlot,
-                    onClearSlot = callbacks.onClearSlot
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp)
                 )
 
-                Spacer(Modifier.height(16.dp))
+                if (hasResumePage) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.start_page_resume_last_page),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color(0xFFFB542B),
+                        modifier = Modifier
+                            .bouncyClickable { callbacks.onResumeClick() }
+                            .padding(8.dp)
+                    )
+                }
 
-                StartPageActionRow(
-                    hasResumePage = hasResumePage,
-                    onResumeClick = callbacks.onResumeClick
+                Spacer(Modifier.weight(1f))
+
+                Text(
+                    text = stringResource(R.string.start_page_photo_credit),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.65f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, bottom = 8.dp)
                 )
 
-                Spacer(Modifier.height(48.dp))
+                BraveBottomNavigationBar(
+                    openTabCount = callbacks.openTabCount(),
+                    onHome = { },
+                    onBookmarks = callbacks.onOpenBookmarks,
+                    onSearch = { },
+                    onTabs = callbacks.onOpenTabs,
+                    onMenu = callbacks.onOpenMenu
+                )
             }
 
             activeSlotDialog?.let { dialog ->

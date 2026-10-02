@@ -97,6 +97,8 @@ class MainActivityCallbackFactory(
         override fun loadUrlFromIntent(url: String) = provider.navigationManager.loadUrlFromIntent(url)
         override fun resolveReadableTextColor(bg: Int, pr: Int, fb: Int): Int =
             provider.themeManager.resolveReadableTextColor(bg, pr, fb)
+        override fun onOpenTabManager() = provider.tabManager.showTabManager(fromMenu = false)
+        override fun getOpenTabCount(): Int = provider.tabManager.browserTabs.size
     }
 
     fun createTabCallbacks(): TabCallbacks = object : TabCallbacks {

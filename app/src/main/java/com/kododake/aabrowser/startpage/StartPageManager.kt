@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,6 +50,8 @@ class StartPageManager(
         fun showMenuButtonTemporarily()
         fun loadUrlFromIntent(url: String)
         fun resolveReadableTextColor(bg: Int, pr: Int, fb: Int): Int
+        fun onOpenTabManager()
+        fun getOpenTabCount(): Int
     }
 
     var isShowingStartPage: Boolean = false
@@ -123,7 +125,14 @@ class StartPageManager(
                     if (!last.isNullOrBlank()) {
                         callbacks.loadUrlFromIntent(last)
                     }
-                }
+                },
+                onOpenBookmarks = {
+                    callbacks.onShowMenuOverlay()
+                    bookmarkManager.showBookmarkManager()
+                },
+                onOpenTabs = { callbacks.onOpenTabManager() },
+                onOpenMenu = { callbacks.onShowMenuOverlay() },
+                openTabCount = { callbacks.getOpenTabCount().coerceAtLeast(1) }
             )
 
             val view = StartPageViews.createStartPageContent(
