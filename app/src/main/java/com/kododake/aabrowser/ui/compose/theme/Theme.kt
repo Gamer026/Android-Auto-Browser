@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser ï¿½ GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 @Composable
 fun AABrowserTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -39,8 +39,8 @@ fun AABrowserTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkPurpleColorScheme
-        else -> LightPurpleColorScheme
+        darkTheme -> DarkBraveColorScheme
+        else -> LightBraveColorScheme
     }
 
     MaterialTheme(

@@ -62,6 +62,12 @@ fun StartPageScreen(
                     onNavigate = callbacks.onNavigate
                 )
 
+                Spacer(Modifier.height(12.dp))
+
+                StartPageHeroBanner(
+                    showHero = customBackgroundBitmap == null
+                )
+
                 Spacer(Modifier.height(16.dp))
 
                 StartPageQuickLinks(

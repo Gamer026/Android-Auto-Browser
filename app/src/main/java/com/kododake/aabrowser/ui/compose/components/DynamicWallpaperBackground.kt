@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser ï¿½ GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,17 +65,20 @@ fun DynamicWallpaperBackground(
             val secondaryContainer = MaterialTheme.colorScheme.secondaryContainer
             val tertiaryContainer = MaterialTheme.colorScheme.tertiaryContainer
 
+            val primary = MaterialTheme.colorScheme.primary
             val gradientColors = if (isDark) {
                 listOf(
-                    lerp(MaterialTheme.colorScheme.surface, secondaryContainer, 0.40f),
-                    lerp(MaterialTheme.colorScheme.surface, tertiaryContainer, 0.35f),
-                    lerp(MaterialTheme.colorScheme.surface, primaryContainer, 0.40f)
+                    lerp(MaterialTheme.colorScheme.surface, secondaryContainer, 0.55f),
+                    lerp(MaterialTheme.colorScheme.surface, tertiaryContainer, 0.50f),
+                    lerp(MaterialTheme.colorScheme.surface, primaryContainer, 0.45f),
+                    lerp(MaterialTheme.colorScheme.surface, primary, 0.25f)
                 )
             } else {
                 listOf(
-                    secondaryContainer.copy(alpha = 0.90f),
-                    tertiaryContainer.copy(alpha = 0.85f),
-                    primaryContainer.copy(alpha = 0.90f)
+                    secondaryContainer.copy(alpha = 0.95f),
+                    tertiaryContainer.copy(alpha = 0.90f),
+                    primaryContainer.copy(alpha = 0.92f),
+                    primary.copy(alpha = 0.18f)
                 )
             }
 

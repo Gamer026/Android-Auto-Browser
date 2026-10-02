@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser ï¿½ GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,20 +21,20 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-val LightPurpleColorScheme = lightColorScheme(
-    primary = Color(0xFF6750A4),
+val LightBraveColorScheme = lightColorScheme(
+    primary = Color(0xFFFB542B),
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFEADDFF),
-    onPrimaryContainer = Color(0xFF21005D),
-    secondary = Color(0xFF635A75),
+    primaryContainer = Color(0xFFFFDAD0),
+    onPrimaryContainer = Color(0xFF3A0A00),
+    secondary = Color(0xFF4338CA),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFE8DEF8),
-    onSecondaryContainer = Color(0xFF1D192B),
-    tertiary = Color(0xFF7D5260),
+    secondaryContainer = Color(0xFFE0E7FF),
+    onSecondaryContainer = Color(0xFF1E1B4B),
+    tertiary = Color(0xFF7C3AED),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFFFD8E4),
-    onTertiaryContainer = Color(0xFF31111D),
-    surface = Color(0xFFFEF7FF),
+    tertiaryContainer = Color(0xFFEDE9FE),
+    onTertiaryContainer = Color(0xFF2E1065),
+    surface = Color(0xFFF5F3FF),
     surfaceBright = Color(0xFFFFFFFF),
     surfaceContainerLowest = Color(0xFFFFFFFF),
     surfaceContainerLow = Color(0xFFF7F2FA),
@@ -54,20 +54,20 @@ val LightPurpleColorScheme = lightColorScheme(
     onErrorContainer = Color(0xFF410E0B)
 )
 
-val DarkPurpleColorScheme = darkColorScheme(
-    primary = Color(0xFFD2BCFC),
-    onPrimary = Color(0xFF32226F),
-    primaryContainer = Color(0xFF4C3889),
-    onPrimaryContainer = Color(0xFFE9DDFF),
-    secondary = Color(0xFFCDC1E1),
-    onSecondary = Color(0xFF332D41),
-    secondaryContainer = Color(0xFF4B425D),
-    onSecondaryContainer = Color(0xFFE9DDFD),
-    tertiary = Color(0xFFEFB8C8),
-    onTertiary = Color(0xFF492532),
-    tertiaryContainer = Color(0xFF6C3644),
-    onTertiaryContainer = Color(0xFFFDDAE1),
-    surface = Color(0xFF141317),
+val DarkBraveColorScheme = darkColorScheme(
+    primary = Color(0xFFFF8A65),
+    onPrimary = Color(0xFF4A1500),
+    primaryContainer = Color(0xFF8B2E0F),
+    onPrimaryContainer = Color(0xFFFFDAD0),
+    secondary = Color(0xFFA5B4FC),
+    onSecondary = Color(0xFF1E1B4B),
+    secondaryContainer = Color(0xFF312E81),
+    onSecondaryContainer = Color(0xFFE0E7FF),
+    tertiary = Color(0xFFC4B5FD),
+    onTertiary = Color(0xFF2E1065),
+    tertiaryContainer = Color(0xFF5B21B6),
+    onTertiaryContainer = Color(0xFFEDE9FE),
+    surface = Color(0xFF0F0D1A),
     surfaceBright = Color(0xFF3B383E),
     surfaceContainerLowest = Color(0xFF0F0D13),
     surfaceContainerLow = Color(0xFF1C1B1F),
@@ -80,7 +80,7 @@ val DarkPurpleColorScheme = darkColorScheme(
     outlineVariant = Color(0xFF494550),
     inverseSurface = Color(0xFFE4E1E7),
     inverseOnSurface = Color(0xFF313034),
-    inversePrimary = Color(0xFF6750A4),
+    inversePrimary = Color(0xFFFB542B),
     error = Color(0xFFF2B8B5),
     onError = Color(0xFF601410),
     errorContainer = Color(0xFF8C1D18),

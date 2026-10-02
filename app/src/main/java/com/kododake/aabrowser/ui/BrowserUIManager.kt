@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser ï¿½ GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -190,7 +190,7 @@ class BrowserUIManager(
             val cs = if (isDark) androidx.compose.material3.dynamicDarkColorScheme(activity) else androidx.compose.material3.dynamicLightColorScheme(activity)
             cs.surfaceContainer.toArgb() to cs.primary.toArgb()
         } else {
-            val cs = if (isDark) com.kododake.aabrowser.ui.compose.theme.DarkPurpleColorScheme else com.kododake.aabrowser.ui.compose.theme.LightPurpleColorScheme
+            val cs = if (isDark) com.kododake.aabrowser.ui.compose.theme.DarkBraveColorScheme else com.kododake.aabrowser.ui.compose.theme.LightBraveColorScheme
             cs.surfaceContainer.toArgb() to cs.primary.toArgb()
         }
     }

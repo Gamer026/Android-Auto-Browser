@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="140dp"
+    android:viewportWidth="360"
+    android:viewportHeight="140">
+    <!-- Sky gradient bands -->
+    <path
+        android:fillColor="#5B21B6"
+        android:pathData="M0,0h360v55h-360z" />
+    <path
+        android:fillColor="#7C3AED"
+        android:pathData="M0,35h360v45h-360z" />
+    <path
+        android:fillColor="#FB542B"
+        android:pathData="M0,65h360v40h-360z"
+        android:fillAlpha="0.85" />
+    <!-- Sun -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M290,38 a16,16 0 1,0 0.01,0" />
+    <!-- Distant hills -->
+    <path
+        android:fillColor="#312E81"
+        android:pathData="M0,95 L60,72 L120,88 L180,68 L240,90 L300,74 L360,92 L360,140 L0,140 Z"
+        android:fillAlpha="0.55" />
+    <path
+        android:fillColor="#1E1B4B"
+        android:pathData="M0,105 L80,88 L160,102 L240,85 L360,100 L360,140 L0,140 Z"
+        android:fillAlpha="0.7" />
+    <!-- Road -->
+    <path
+        android:fillColor="#374151"
+        android:pathData="M0,118 L360,118 L360,140 L0,140 Z" />
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M168,125h24v3h-24z M208,125h24v3h-24z M248,125h24v3h-24z" />
+    <!-- Car silhouette -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M118,108 L128,98 L232,98 L242,108 L242,116 L118,116 Z" />
+    <path
+        android:fillColor="#93C5FD"
+        android:pathData="M132,100 L158,100 L156,106 L134,106 Z" />
+    <path
+        android:fillColor="#93C5FD"
+        android:pathData="M202,100 L228,100 L226,106 L204,106 Z" />
+    <path
+        android:fillColor="#111827"
+        android:pathData="M128,116 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    <path
+        android:fillColor="#111827"
+        android:pathData="M218,116 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    <!-- Shield / browse accent (Brave-like) -->
+    <path
+        android:fillColor="#FB542B"
+        android:pathData="M52,52 L68,44 L84,52 L84,68 Q68,78 52,68 Z"
+        android:fillAlpha="0.95" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,60 L64,64 L74,52 L72,50 L64,60 Z" />
+</vector>

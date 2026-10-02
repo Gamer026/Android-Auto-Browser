@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="theme_primary">#1B6EF3</color>
+    <color name="theme_primary">#FB542B</color>
     <color name="theme_on_primary">#FFFFFFFF</color>
-    <color name="theme_primary_container">#D7E3FF</color>
-    <color name="theme_on_primary_container">#001C46</color>
-    <color name="theme_secondary">#445E91</color>
+    <color name="theme_primary_container">#FFDAD0</color>
+    <color name="theme_on_primary_container">#3A0A00</color>
+    <color name="theme_secondary">#4338CA</color>
     <color name="theme_on_secondary">#FFFFFFFF</color>
-    <color name="theme_secondary_container">#D9E2FF</color>
-    <color name="theme_on_secondary_container">#001A41</color>
-    <color name="theme_tertiary">#715574</color>
+    <color name="theme_secondary_container">#E0E7FF</color>
+    <color name="theme_on_secondary_container">#1E1B4B</color>
+    <color name="theme_tertiary">#7C3AED</color>
     <color name="theme_on_tertiary">#FFFFFFFF</color>
-    <color name="theme_tertiary_container">#FCD7FC</color>
-    <color name="theme_on_tertiary_container">#29132E</color>
+    <color name="theme_tertiary_container">#EDE9FE</color>
+    <color name="theme_on_tertiary_container">#2E1065</color>
     <color name="theme_error">#BA1A1A</color>
     <color name="theme_on_error">#FFFFFFFF</color>
     <color name="theme_error_container">#FFDAD6</color>
     <color name="theme_on_error_container">#410002</color>
-    <color name="theme_background">#FFF8FAFC</color>
+    <color name="theme_background">#FFF5F3FF</color>
     <color name="theme_on_background">#191C20</color>
     <color name="theme_surface">#FFF8FAFC</color>
     <color name="theme_on_surface">#191C20</color>
@@ -33,6 +33,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="qr_code_background">#FFFFFFFF</color>
     <color name="menu_overlay_scrim">#80000000</color>
-    <color name="launcher_background_fill">#1565C0</color>
+    <color name="launcher_background_fill">#4338CA</color>
     <color name="launcher_grid_stroke">#33FFFFFF</color>
 </resources>
