@@ -101,16 +101,7 @@ fun StartPageScreen(
                     color = Color.White.copy(alpha = 0.65f),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, bottom = 8.dp)
-                )
-
-                BraveBottomNavigationBar(
-                    openTabCount = callbacks.openTabCount(),
-                    onHome = { },
-                    onBookmarks = callbacks.onOpenBookmarks,
-                    onSearch = { },
-                    onTabs = callbacks.onOpenTabs,
-                    onMenu = callbacks.onOpenMenu
+                        .padding(start = 16.dp, bottom = 12.dp)
                 )
             }
 

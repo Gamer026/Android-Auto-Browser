@@ -108,10 +108,13 @@ class WebBrowserCallbackFactory(
             },
             onError = { _, d ->
                 activity.runOnUiThread {
-                    if (isDebugBuild && tab.id == provider.tabManager.activeTabId) {
+                    val message = d.orEmpty()
+                    val isOrbNoise = message.uppercase().contains("ERR_BLOCKED_BY_ORB") ||
+                        message.uppercase().contains("ERR_BLOCKED_BY_RESPONSE")
+                    if (isDebugBuild && tab.id == provider.tabManager.activeTabId && !isOrbNoise) {
                         Toast.makeText(
                             activity,
-                            d ?: activity.getString(R.string.error_generic_message),
+                            message.ifBlank { activity.getString(R.string.error_generic_message) },
                             Toast.LENGTH_SHORT
                         ).show()
                     }

@@ -64,6 +64,25 @@ class BrowserUIManager(
 
     val menuHelper = com.kododake.aabrowser.ui.controllers.MenuSetupHelper()
 
+    private var chromeController: com.kododake.aabrowser.ui.controllers.BrowserChromeController? = null
+
+    fun setupBrowserChrome(
+        onHome: () -> Unit,
+        onBookmarks: () -> Unit,
+        onSearch: () -> Unit,
+        onTabs: () -> Unit,
+        onMenu: () -> Unit
+    ) {
+        chromeController = com.kododake.aabrowser.ui.controllers.BrowserChromeController(binding, tabManager).also {
+            it.setup(onHome, onBookmarks, onSearch, onTabs, onMenu)
+        }
+        binding.fabComposeView.visibility = View.GONE
+    }
+
+    private fun setChromeBarVisible(visible: Boolean) {
+        chromeController?.setBottomBarVisible(visible)
+    }
+
     fun isInFullscreen(): Boolean = fullscreenController.isInFullscreen()
     fun isImmersiveMode(): Boolean = fullscreenController.isImmersiveMode()
     fun setImmersiveMode(enabled: Boolean) = fullscreenController.setImmersiveMode(enabled)
@@ -75,6 +94,7 @@ class BrowserUIManager(
             onPrepareEnter = {
                 if (binding.menuOverlay.isVisible) hideMenuOverlay()
                 menuHelper.hideFab()
+                setChromeBarVisible(false)
                 tabManager.activeTab?.webView?.visibility = View.INVISIBLE
             }
         )
@@ -86,6 +106,7 @@ class BrowserUIManager(
             onRestoreView = {
                 val webViewVisibility = if (startPageManager.isShowingStartPage) View.INVISIBLE else View.VISIBLE
                 tabManager.activeTab?.webView?.visibility = webViewVisibility
+                setChromeBarVisible(true)
                 applyQuickActionButtonPreferences()
                 callbacks.showMenuButtonTemporarily()
             }
@@ -93,6 +114,7 @@ class BrowserUIManager(
     }
 
     fun applyQuickActionButtonPreferences() {
+        binding.fabComposeView.visibility = View.GONE
         val mode = BrowserPreferences.getQuickActionButtonMode(activity)
         menuHelper.setFabMode(mode == QuickActionButtonMode.ADDRESS_BAR)
         val density = activity.resources.displayMetrics.density
@@ -109,10 +131,6 @@ class BrowserUIManager(
         layoutParams.setMargins(margin, margin, margin, margin)
         binding.fabComposeView.layoutParams = layoutParams
 
-        val alwaysVisible = BrowserPreferences.isQuickActionButtonAlwaysVisible(activity)
-        if ((startPageManager.isShowingStartPage || alwaysVisible) && !isInFullscreen() && !binding.menuOverlay.isVisible) {
-            menuHelper.showFab()
-        }
     }
 
     fun showMenuOverlay(focusAddressBar: Boolean = false) {

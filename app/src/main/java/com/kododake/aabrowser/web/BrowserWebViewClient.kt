@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,6 +69,7 @@ class BrowserWebViewClient(
                 return
             }
         }
+        UserAgentManager.applyBrowserIdentityForUrl(view, stringUrl)
     }
 
     override fun onPageFinished(view: WebView, url: String?) {
@@ -85,6 +86,13 @@ class BrowserWebViewClient(
     }
 
     override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+        if (!request.isForMainFrame) {
+            return
+        }
+        val description = error.description?.toString().orEmpty()
+        if (isIgnorableWebResourceError(description)) {
+            return
+        }
         if (request.isForMainFrame) {
             val code = error.errorCode
             val shouldShowErrorPage = when (code) {
@@ -109,6 +117,14 @@ class BrowserWebViewClient(
             }
         }
         callbacks.onError(error.errorCode, error.description?.toString())
+    }
+
+    private fun isIgnorableWebResourceError(description: String): Boolean {
+        if (description.isBlank()) return false
+        val normalized = description.uppercase()
+        return normalized.contains("ERR_BLOCKED_BY_ORB") ||
+            normalized.contains("ERR_BLOCKED_BY_RESPONSE") ||
+            normalized.contains("ERR_BLOCKED_BY_CLIENT")
     }
 
     override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, errorResponse: WebResourceResponse) {

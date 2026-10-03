@@ -27,7 +27,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Search
@@ -226,11 +225,7 @@ fun BraveBottomNavigationBar(
                 tabCount = openTabCount.coerceAtLeast(1),
                 onClick = onTabs
             )
-            BraveNavItem(
-                icon = Icons.AutoMirrored.Rounded.MenuBook,
-                label = stringResource(R.string.start_page_nav_menu),
-                onClick = onMenu
-            )
+            BraveNavMenuItem(onClick = onMenu)
         }
     }
 }
@@ -249,6 +244,24 @@ private fun BraveNavItem(
     ) {
         Icon(
             imageVector = icon,
+            contentDescription = label,
+            tint = Color.White.copy(alpha = 0.92f),
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Composable
+private fun BraveNavMenuItem(onClick: () -> Unit) {
+    val label = stringResource(R.string.start_page_nav_menu)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .bouncyClickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 4.dp)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_menu_24px),
             contentDescription = label,
             tint = Color.White.copy(alpha = 0.92f),
             modifier = Modifier.size(24.dp)

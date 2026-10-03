@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser  GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import com.kododake.aabrowser.permissions.PermissionManager
 import com.kododake.aabrowser.startpage.StartPageManager
 import com.kododake.aabrowser.tabs.TabManager
 import com.kododake.aabrowser.ui.BrowserUIManager
+import com.kododake.aabrowser.web.UserAgentManager
 
 class NavigationManager(
     private val activity: AppCompatActivity,
@@ -63,7 +64,9 @@ class NavigationManager(
     }
 
     fun loadUrlFromIntent(rawUrl: String) {
-        val navigable = BrowserPreferences.formatNavigableUrl(rawUrl.trim())
+        val navigable = YoutubeNavigationHelper.normalizeForWebView(
+            BrowserPreferences.formatNavigableUrl(rawUrl.trim())
+        )
         if (navigable.isNotEmpty()) {
             navigateActiveTabTo(navigable, closeMenuAfterNavigate = true)
         }
@@ -88,6 +91,7 @@ class NavigationManager(
         closeMenuAfterNavigate: Boolean,
         resetSessionIfPageOpen: Boolean = false
     ) {
+        val resolvedUrl = YoutubeNavigationHelper.normalizeForWebView(navigable)
         var targetTab = tabManager.activeTab
         if (targetTab == null) {
             targetTab = tabManager.createNewTab(activate = true)
@@ -97,27 +101,27 @@ class NavigationManager(
         }
 
         if (resetSessionIfPageOpen && !startPageManager.isShowingStartPage) {
-            val freshTab = tabManager.resetActiveTabSession(navigable)
+            val freshTab = tabManager.resetActiveTabSession(resolvedUrl)
             if (freshTab != null) {
                 targetTab = freshTab
             }
         }
         
         val targetWebView = targetTab.webView
-        val uri = runCatching { Uri.parse(navigable) }.getOrNull()
+        val uri = runCatching { Uri.parse(resolvedUrl) }.getOrNull()
         if (uri == null) {
             return
         }
 
         val finishNavigation: (() -> Unit) -> Unit = { loadAction ->
-            tabManager.updateTabUrlAndTitle(targetTab.id, navigable, "")
+            tabManager.updateTabUrlAndTitle(targetTab.id, resolvedUrl, "")
             
             if (targetTab.id == tabManager.activeTabId) {
-                callbacks.setCurrentUrl(navigable)
+                callbacks.setCurrentUrl(resolvedUrl)
                 callbacks.setCurrentPageTitle("")
             }
             
-            BrowserPreferences.persistUrl(activity, navigable)
+            BrowserPreferences.persistUrl(activity, resolvedUrl)
             val isFromStartPage = startPageManager.isShowingStartPage
             if (isFromStartPage) {
                 targetWebView.visibility = View.VISIBLE
@@ -139,9 +143,10 @@ class NavigationManager(
                 uri = uri,
                 onAllowOnce = {
                     finishNavigation {
-                        targetWebView.setTag(R.id.webview_allow_once_uri_tag, navigable)
-                        targetWebView.post { 
-                            targetWebView.loadUrl(navigable) 
+                        targetWebView.setTag(R.id.webview_allow_once_uri_tag, resolvedUrl)
+                        targetWebView.post {
+                            UserAgentManager.applyBrowserIdentityForUrl(targetWebView, resolvedUrl)
+                            targetWebView.loadUrl(resolvedUrl)
                         }
                     }
                 },
@@ -150,9 +155,10 @@ class NavigationManager(
                         BrowserPreferences.addAllowedCleartextHost(activity, host)
                     }
                     finishNavigation {
-                        targetWebView.setTag(R.id.webview_allow_once_uri_tag, navigable)
-                        targetWebView.post { 
-                            targetWebView.loadUrl(navigable) 
+                        targetWebView.setTag(R.id.webview_allow_once_uri_tag, resolvedUrl)
+                        targetWebView.post {
+                            UserAgentManager.applyBrowserIdentityForUrl(targetWebView, resolvedUrl)
+                            targetWebView.loadUrl(resolvedUrl)
                         }
                     }
                 },
@@ -165,8 +171,9 @@ class NavigationManager(
             return
         }
 
-        finishNavigation { 
-            targetWebView.loadUrl(navigable) 
+        finishNavigation {
+            UserAgentManager.applyBrowserIdentityForUrl(targetWebView, resolvedUrl)
+            targetWebView.loadUrl(resolvedUrl)
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -165,9 +165,24 @@ class MainActivitySetup(
             }
         )
         managers.uiManager.menuHelper.setup(binding.menuComposeView, menuActions)
-        managers.uiManager.menuHelper.setupFab(binding.fabComposeView) {
-            actions.handleQuickActionButtonPressed()
-        }
+        managers.uiManager.setupBrowserChrome(
+            onHome = {
+                actions.showStartPage()
+                managers.uiManager.hideMenuOverlay()
+            },
+            onBookmarks = {
+                managers.overlayCoordinator.openBookmarks(fromMenu = false)
+            },
+            onSearch = {
+                managers.uiManager.showMenuOverlay(focusAddressBar = true)
+            },
+            onTabs = {
+                managers.tabManager.showTabManager(fromMenu = false)
+            },
+            onMenu = {
+                managers.uiManager.showMenuOverlay()
+            }
+        )
         managers.uiManager.menuHelper.updateVersion("v${com.kododake.aabrowser.BuildConfig.VERSION_NAME}")
         val isFullscreen = BrowserPreferences.shouldUseFullscreenMode(activity)
         managers.uiManager.menuHelper.stateHolder.isFullscreenMode = isFullscreen

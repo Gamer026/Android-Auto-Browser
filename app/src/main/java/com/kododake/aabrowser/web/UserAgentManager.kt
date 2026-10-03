@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 package com.kododake.aabrowser.web
 
 import android.content.Context
+import android.net.Uri
+import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.webkit.UserAgentMetadata
 import androidx.webkit.WebSettingsCompat
@@ -179,5 +181,37 @@ object UserAgentManager {
 
     private fun mobileInitialScalePercent(webView: WebView): Int {
         return (webView.context.resources.displayMetrics.density * 100).toInt()
+    }
+
+    fun isYoutubeRelatedHost(host: String?): Boolean {
+        if (host.isNullOrBlank()) return false
+        val normalized = host.lowercase()
+        return normalized == "youtu.be" ||
+            normalized.endsWith(".youtu.be") ||
+            normalized == "youtube.com" ||
+            normalized.endsWith(".youtube.com") ||
+            normalized.contains("googlevideo.com") ||
+            normalized.endsWith(".googlevideo.com")
+    }
+
+    fun applyBrowserIdentityForUrl(webView: WebView, url: String?) {
+        val host = url?.let { runCatching { Uri.parse(it).host }.getOrNull() }
+        val profile = BrowserPreferences.getUserAgentProfile(webView.context)
+        val desktopEnabled = BrowserPreferences.shouldUseDesktopMode(webView.context)
+
+        if (isYoutubeRelatedHost(host)) {
+            val nativeUserAgent = webView.getTag(R.id.webview_original_user_agent_tag) as? String
+                ?: WebSettings.getDefaultUserAgent(webView.context)
+            webView.settings.userAgentString = nativeUserAgent
+            webView.settings.useWideViewPort = false
+            webView.settings.loadWithOverviewMode = false
+            webView.setInitialScale(mobileInitialScalePercent(webView))
+            webView.settings.textZoom = 100
+            applyUserAgentMetadata(webView, UserAgentProfile.ANDROID_CHROME, desktop = false)
+            webView.setTag(R.id.webview_user_agent_profile_tag, "${profile.storageKey}_youtube_native")
+            return
+        }
+
+        applyBrowserIdentity(webView, profile, desktopEnabled)
     }
 }
