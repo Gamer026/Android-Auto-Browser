@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -18,12 +20,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
@@ -39,15 +44,37 @@ fun BraveSearchBar(
     containerColor: Color = Color(0xFF21262D),
     leadingIcon: @Composable () -> Unit = {},
     trailingIcon: @Composable () -> Unit = {},
+    query: String? = null,
+    onQueryChange: ((String) -> Unit)? = null,
+    requestFocus: Boolean = false,
+    onFocusConsumed: () -> Unit = {}
 ) {
-    var queryText by remember { mutableStateOf("") }
+    var internalQuery by remember { mutableStateOf("") }
+    val queryText = query ?: internalQuery
+    val setQuery: (String) -> Unit = { value ->
+        if (onQueryChange != null) {
+            onQueryChange(value)
+        } else {
+            internalQuery = value
+        }
+    }
     val pillShape = RoundedCornerShape(28.dp)
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(requestFocus) {
+        if (requestFocus) {
+            focusRequester.requestFocus()
+            onFocusConsumed()
+        }
+    }
 
     Surface(
         shape = pillShape,
         color = containerColor,
         modifier = modifier
             .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 14.dp, vertical = 8.dp)
             .height(52.dp)
     ) {
         Row(
@@ -59,7 +86,7 @@ fun BraveSearchBar(
             Spacer(Modifier.width(10.dp))
             BasicTextField(
                 value = queryText,
-                onValueChange = { queryText = it },
+                onValueChange = setQuery,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Uri,
@@ -84,7 +111,9 @@ fun BraveSearchBar(
                     }
                     innerTextField()
                 },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester)
             )
             Spacer(Modifier.width(8.dp))
             trailingIcon()

@@ -61,6 +61,14 @@
             android:layout_gravity="top"
             android:elevation="8dp" />
 
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/browserTopSearchComposeView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:elevation="10dp"
+            android:visibility="gone" />
+
     </FrameLayout>
 
     <FrameLayout

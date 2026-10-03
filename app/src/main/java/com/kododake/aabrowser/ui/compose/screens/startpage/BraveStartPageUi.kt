@@ -300,16 +300,17 @@ private fun BraveNavTabItem(
 @Composable
 fun BraveStartPageTopBar(
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    requestFocus: Boolean = false,
+    onFocusConsumed: () -> Unit = {}
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 14.dp, vertical = 8.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         BraveSearchBar(
             onNavigate = onNavigate,
+            requestFocus = requestFocus,
+            onFocusConsumed = onFocusConsumed,
             leadingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_car_browser_mark),

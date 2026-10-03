@@ -30,6 +30,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.webkit.WebViewFeature
 import com.kododake.aabrowser.R
 import com.kododake.aabrowser.data.BrowserPreferences
@@ -74,6 +75,7 @@ class BrowserWebViewClient(
 
     override fun onPageFinished(view: WebView, url: String?) {
         super.onPageFinished(view, url)
+        (view.parent as? SwipeRefreshLayout)?.isRefreshing = false
         view.evaluateJavascript(SpeechRecognitionBridge.POLYFILL_JS, null)
         if (!WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
             if (BrowserPreferences.isDrmL3EnforcerEnabled(view.context)) {

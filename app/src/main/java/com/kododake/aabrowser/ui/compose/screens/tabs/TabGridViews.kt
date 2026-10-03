@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,17 +18,24 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Colorize
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DriveFileRenameOutline
 import androidx.compose.material.icons.outlined.GridOff
+import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Language
@@ -42,6 +50,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +59,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -59,16 +72,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.kododake.aabrowser.R
+import kotlin.math.roundToInt
 import com.kododake.aabrowser.ui.compose.components.bouncyClickable
 
 private val BraveCardBg = Color(0xFF1B1D21)
 private val BraveCardBorder = Color(0xFF3A3D42)
 private val BraveSearchBg = Color(0xFF2B2D31)
 private val BraveBlueBorder = Color(0xFF4285F4)
-private val BraveGroupBg = Color(0xFF2C5BCC)
+private val BraveGroupBg = Color(0xFF2952C8)
+private val BraveGroupAccent = Color(0xFF6AA4F8)
 private val BravePreviewBg = Color(0xFF25272B)
+private val BraveGroupPanelBg = Color(0xFF1E2024)
+private val BraveDropHighlight = Color(0xFF5B9BF5)
 
 @Composable
 fun TabSearchBar(
@@ -89,7 +107,7 @@ fun TabSearchBar(
         modifier = modifier
             .fillMaxWidth()
             .height(44.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(22.dp))
             .background(BraveSearchBg)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -113,26 +131,58 @@ fun TabSearchBar(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TabGridSingleCard(
     tab: TabItemUi,
+    otherTabs: List<TabItemUi>,
     favicon: Bitmap?,
     thumbnail: Bitmap?,
     onSelect: () -> Unit,
     onClose: () -> Unit,
     onGroupWithActive: () -> Unit,
-    modifier: Modifier = Modifier
+    onGroupWithTab: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+    dragState: TabGridDragState? = null,
+    enableDrag: Boolean = true,
+    showGroupMenu: Boolean = true
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    val borderColor = if (tab.isActive) BraveBlueBorder else BraveCardBorder.copy(0.5f)
-    val borderWidth = if (tab.isActive) 2.dp else 1.dp
+    val isDropTarget = dragState?.isHighlighted(TabDropTarget.Tab(tab.id)) == true
+    val borderColor = when {
+        isDropTarget -> BraveDropHighlight
+        tab.isActive -> BraveBlueBorder
+        else -> BraveCardBorder.copy(0.5f)
+    }
+    val borderWidth = when {
+        isDropTarget || tab.isActive -> 2.dp
+        else -> 1.dp
+    }
+    val dragging = dragState?.isDragging(tab.id) == true
+    val dragFade by animateFloatAsState(
+        targetValue = if (dragging) 0.45f else 1f,
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+        label = "tabCardDragFade"
+    )
 
     Column(
         modifier = modifier
+            .alpha(dragFade)
+            .then(
+                if (dragState != null && enableDrag) {
+                    Modifier
+                        .tabDropTarget(dragState, TabDropTarget.Tab(tab.id))
+                        .tabCardDraggable(dragState, tab.id)
+                } else {
+                    Modifier
+                }
+            )
             .clip(RoundedCornerShape(12.dp))
             .background(BraveCardBg)
             .border(borderWidth, borderColor, RoundedCornerShape(12.dp))
-            .bouncyClickable(onClick = onSelect)
+            .pointerInput(tab.id, dragState?.draggedTabId) {
+                detectTapGestures(onTap = { onSelect() })
+            }
     ) {
         Row(
             modifier = Modifier
@@ -143,12 +193,37 @@ fun TabGridSingleCard(
             TabFavicon(favicon, tab.isPrivate, Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
             Text(tab.title, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, color = Color.White, style = MaterialTheme.typography.labelMedium)
-            Box {
-                IconButton(onClick = { menuExpanded = true }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = null, tint = Color.White.copy(0.6f), modifier = Modifier.size(16.dp))
-                }
-                DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                    DropdownMenuItem(text = { Text(stringResource(R.string.tab_group_with_active)) }, onClick = { menuExpanded = false; onGroupWithActive() })
+            if (showGroupMenu) {
+                Box {
+                    IconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(Icons.Rounded.MoreVert, contentDescription = null, tint = Color.White.copy(0.6f), modifier = Modifier.size(16.dp))
+                    }
+                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                        if (otherTabs.isNotEmpty()) {
+                            otherTabs.forEach { other ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(stringResource(R.string.tab_group_with_named, other.title))
+                                    },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onGroupWithTab(other.id)
+                                    }
+                                )
+                            }
+                        } else {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.tab_group_with_active)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onGroupWithActive()
+                                }
+                            )
+                        }
+                    }
                 }
             }
             IconButton(onClick = onClose, modifier = Modifier.size(24.dp)) {
@@ -166,7 +241,7 @@ fun TabGridSingleCard(
                 .background(BravePreviewBg),
             contentAlignment = Alignment.Center
         ) {
-            if (thumbnail != null) {
+            if (thumbnail != null && !thumbnail.isRecycled) {
                 Image(
                     bitmap = thumbnail.asImageBitmap(),
                     contentDescription = null,
@@ -195,16 +270,16 @@ fun TabGridGroupCard(
     entry: TabGridEntry.Group,
     faviconProvider: (String) -> Bitmap?,
     thumbnailProvider: (Long) -> Bitmap?,
-    onSelectTab: (Long) -> Unit,
+    onOpenGroup: () -> Unit,
     onCloseGroup: () -> Unit,
     onRenameGroup: (String) -> Unit,
     onUngroupTabs: () -> Unit,
     onDeleteGroup: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    dragState: TabGridDragState? = null
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
-    var expanded by remember { mutableStateOf(false) }
 
     if (showRenameDialog) {
         GroupRenameDialog(
@@ -214,26 +289,35 @@ fun TabGridGroupCard(
         )
     }
 
-    if (expanded) {
-        ExpandedGroupView(entry, faviconProvider, thumbnailProvider, onSelectTab, onCollapse = { expanded = false })
-        return
-    }
-
-    val previewTabs = entry.tabs.take(4)
-    val extraCount = (entry.tabs.size - 4).coerceAtLeast(0)
+    val hasOverflow = entry.tabs.size > 4
+    val previewTabs = if (hasOverflow) entry.tabs.take(3) else entry.tabs.take(4)
+    val extraCount = if (hasOverflow) entry.tabs.size - 3 else 0
+    val isDropTarget = dragState?.isHighlighted(TabDropTarget.Group(entry.groupId)) == true
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .then(
+                if (dragState != null) {
+                    Modifier.tabDropTarget(dragState, TabDropTarget.Group(entry.groupId))
+                } else {
+                    Modifier
+                }
+            )
+            .shadow(if (isDropTarget) 8.dp else 0.dp, RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(BraveGroupBg)
-            .border(1.dp, BraveGroupBg.copy(0.6f), RoundedCornerShape(12.dp))
-            .bouncyClickable { expanded = true }
+            .border(
+                width = if (isDropTarget) 2.dp else 1.dp,
+                color = if (isDropTarget) BraveDropHighlight else BraveGroupBg.copy(0.85f),
+                shape = RoundedCornerShape(14.dp)
+            )
+            .bouncyClickable { onOpenGroup() }
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(start = 10.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
+            Modifier.fillMaxWidth().padding(start = 10.dp, end = 4.dp, top = 8.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(Modifier.size(12.dp).clip(CircleShape).background(Color(0xFF6AA4F8)))
+            Box(Modifier.size(14.dp).clip(CircleShape).background(BraveGroupAccent))
             Spacer(Modifier.width(8.dp))
             Text(
                 stringResource(R.string.tab_group_count, entry.tabs.size),
@@ -245,84 +329,57 @@ fun TabGridGroupCard(
             )
             Box {
                 IconButton(onClick = { menuExpanded = true }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = null, tint = Color.White.copy(0.7f), modifier = Modifier.size(16.dp))
+                    Icon(Icons.Rounded.MoreVert, contentDescription = null, tint = Color.White.copy(0.85f), modifier = Modifier.size(18.dp))
                 }
-                DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.group_menu_close)) },
-                        leadingIcon = { Icon(Icons.Outlined.Close, contentDescription = null) },
-                        onClick = { menuExpanded = false; onCloseGroup() }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.group_menu_rename)) },
-                        leadingIcon = { Icon(Icons.Outlined.DriveFileRenameOutline, contentDescription = null) },
-                        onClick = { menuExpanded = false; showRenameDialog = true }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.group_menu_ungroup)) },
-                        leadingIcon = { Icon(Icons.Outlined.GridOff, contentDescription = null) },
-                        onClick = { menuExpanded = false; onUngroupTabs() }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.group_menu_delete)) },
-                        leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
-                        onClick = { menuExpanded = false; onDeleteGroup() }
-                    )
-                }
+                GroupOverflowMenu(
+                    expanded = menuExpanded,
+                    onDismiss = { menuExpanded = false },
+                    onCloseGroup = { menuExpanded = false; onCloseGroup() },
+                    onRename = { menuExpanded = false; showRenameDialog = true },
+                    onUngroup = { menuExpanded = false; onUngroupTabs() },
+                    onDelete = { menuExpanded = false; onDeleteGroup() },
+                    showBraveExtras = false
+                )
             }
         }
 
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 6.dp).padding(bottom = 3.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 6.dp).padding(bottom = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
-            previewTabs.take(2).forEach { tab ->
-                GroupThumbnailBox(tab, faviconProvider, thumbnailProvider, onSelectTab, Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                GroupPreviewCell(previewTabs.getOrNull(0), faviconProvider, thumbnailProvider, Modifier.weight(1f))
+                GroupPreviewCell(previewTabs.getOrNull(1), faviconProvider, thumbnailProvider, Modifier.weight(1f))
             }
-            if (previewTabs.size < 2) Spacer(Modifier.weight(1f))
-        }
-
-        if (previewTabs.size > 2 || extraCount > 0) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 6.dp).padding(bottom = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
-            ) {
-                previewTabs.drop(2).forEach { tab ->
-                    GroupThumbnailBox(tab, faviconProvider, thumbnailProvider, onSelectTab, Modifier.weight(1f))
-                }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                GroupPreviewCell(previewTabs.getOrNull(2), faviconProvider, thumbnailProvider, Modifier.weight(1f))
                 if (extraCount > 0) {
-                    Box(
-                        modifier = Modifier.weight(1f).aspectRatio(0.75f).clip(RoundedCornerShape(6.dp)).background(Color(0xFF3B6FD6)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("+$extraCount", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                    }
+                    GroupOverflowCell(extraCount, Modifier.weight(1f))
+                } else {
+                    GroupPreviewCell(previewTabs.getOrNull(3), faviconProvider, thumbnailProvider, Modifier.weight(1f))
                 }
-                val filledSlots = previewTabs.drop(2).size + if (extraCount > 0) 1 else 0
-                if (filledSlots < 2) Spacer(Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-private fun GroupThumbnailBox(
-    tab: TabItemUi,
+private fun GroupPreviewCell(
+    tab: TabItemUi?,
     faviconProvider: (String) -> Bitmap?,
     thumbnailProvider: (Long) -> Bitmap?,
-    onSelectTab: (Long) -> Unit,
     modifier: Modifier
 ) {
-    val thumb = thumbnailProvider(tab.id)
     Box(
         modifier = modifier
-            .aspectRatio(0.75f)
+            .aspectRatio(0.72f)
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF1B1D21))
-            .bouncyClickable { onSelectTab(tab.id) },
+            .background(Color(0xFF1B1D21)),
         contentAlignment = Alignment.Center
     ) {
-        if (thumb != null) {
+        if (tab == null) return@Box
+        val thumb = thumbnailProvider(tab.id)
+        if (thumb != null && !thumb.isRecycled) {
             Image(bitmap = thumb.asImageBitmap(), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         } else {
             val fav = faviconProvider(tab.url)
@@ -332,77 +389,242 @@ private fun GroupThumbnailBox(
                 Icon(Icons.Rounded.Language, contentDescription = null, tint = Color.White.copy(0.3f), modifier = Modifier.size(24.dp))
             }
         }
+        val fav = faviconProvider(tab.url)
+        Box(
+            Modifier
+                .align(Alignment.TopStart)
+                .padding(4.dp)
+                .size(18.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(Color(0xFF0D0F12).copy(0.85f)),
+            contentAlignment = Alignment.Center
+        ) {
+            TabFavicon(fav, tab.isPrivate, Modifier.size(12.dp))
+        }
     }
 }
 
 @Composable
-private fun ExpandedGroupView(
-    entry: TabGridEntry.Group,
-    faviconProvider: (String) -> Bitmap?,
-    thumbnailProvider: (Long) -> Bitmap?,
-    onSelectTab: (Long) -> Unit,
-    onCollapse: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(BraveGroupBg)
-            .border(2.dp, BraveBlueBorder, RoundedCornerShape(12.dp))
+private fun GroupOverflowCell(extraCount: Int, modifier: Modifier) {
+    Box(
+        modifier = modifier
+            .aspectRatio(0.72f)
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color(0xFF3B6FD6)),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(start = 12.dp, end = 8.dp, top = 10.dp, bottom = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("← ", color = Color.White, modifier = Modifier.bouncyClickable(onClick = onCollapse))
-            Box(Modifier.size(12.dp).clip(CircleShape).background(Color(0xFF6AA4F8)))
-            Spacer(Modifier.width(8.dp))
-            Text(
-                entry.title,
-                color = Color.White,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                stringResource(R.string.tab_group_count, entry.tabs.size),
-                color = Color.White.copy(0.7f),
-                style = MaterialTheme.typography.labelSmall
+        Text("+$extraCount", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+    }
+}
+
+@Composable
+private fun GroupOverflowMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit,
+    onCloseGroup: () -> Unit,
+    onRename: () -> Unit,
+    onUngroup: () -> Unit,
+    onDelete: () -> Unit,
+    showBraveExtras: Boolean
+) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        if (showBraveExtras) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.group_menu_select_tabs)) },
+                leadingIcon = { Icon(Icons.Outlined.SelectAll, contentDescription = null) },
+                onClick = onDismiss
             )
         }
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.group_menu_rename)) },
+            leadingIcon = { Icon(Icons.Outlined.DriveFileRenameOutline, contentDescription = null) },
+            onClick = onRename
+        )
+        if (showBraveExtras) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.group_menu_edit_colour)) },
+                leadingIcon = { Icon(Icons.Outlined.Colorize, contentDescription = null) },
+                onClick = onDismiss
+            )
+        }
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.group_menu_close)) },
+            leadingIcon = { Icon(Icons.Outlined.Close, contentDescription = null) },
+            onClick = onCloseGroup
+        )
+        if (!showBraveExtras) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.group_menu_ungroup)) },
+                leadingIcon = { Icon(Icons.Outlined.GridOff, contentDescription = null) },
+                onClick = onUngroup
+            )
+        }
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.group_menu_delete)) },
+            leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+            onClick = onDelete
+        )
+    }
+}
 
-        Column(Modifier.padding(horizontal = 6.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            entry.tabs.forEach { tab ->
-                val thumb = thumbnailProvider(tab.id)
-                val fav = faviconProvider(tab.url)
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFF1B1D21))
-                        .bouncyClickable { onSelectTab(tab.id) }
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (thumb != null) {
-                        Image(
-                            bitmap = thumb.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp, 36.dp).clip(RoundedCornerShape(4.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        TabFavicon(fav, tab.isPrivate, Modifier.size(24.dp))
+@Composable
+fun TabGroupDetailScreen(
+    entry: TabGridEntry.Group,
+    allTabs: List<TabItemUi>,
+    actions: TabActions,
+    faviconProvider: (String) -> Bitmap?,
+    dragState: TabGridDragState,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    var showRenameDialog by remember { mutableStateOf(false) }
+
+    if (showRenameDialog) {
+        GroupRenameDialog(
+            currentTitle = entry.title,
+            onDismiss = { showRenameDialog = false },
+            onRename = { newTitle ->
+                showRenameDialog = false
+                actions.onRenameGroup(entry.groupId, newTitle)
+            }
+        )
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .tabDropTarget(dragState, TabDropTarget.UngroupZone)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp, vertical = 8.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(BraveGroupPanelBg)
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.tab_manager_back), tint = Color.White)
+                }
+                Box(Modifier.size(14.dp).clip(CircleShape).background(BraveGroupAccent))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.tab_group_count, entry.tabs.size),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                IconButton(onClick = actions.onNewTab) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.tab_manager_add), tint = Color.White)
+                }
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(Icons.Rounded.MoreVert, contentDescription = null, tint = Color.White)
                     }
-                    Spacer(Modifier.width(10.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(tab.title, color = Color.White, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(tab.url.removePrefix("https://").removePrefix("http://").take(40), color = Color.White.copy(0.5f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                    }
+                    GroupOverflowMenu(
+                        expanded = menuExpanded,
+                        onDismiss = { menuExpanded = false },
+                        onCloseGroup = {
+                            menuExpanded = false
+                            actions.onCloseGroup(entry.groupId)
+                            onBack()
+                        },
+                        onRename = { menuExpanded = false; showRenameDialog = true },
+                        onUngroup = {
+                            menuExpanded = false
+                            actions.onUngroupTabs(entry.groupId)
+                            onBack()
+                        },
+                        onDelete = {
+                            menuExpanded = false
+                            actions.onDeleteGroup(entry.groupId)
+                            onBack()
+                        },
+                        showBraveExtras = true
+                    )
+                }
+            }
+
+            Text(
+                stringResource(R.string.tab_drag_ungroup_hint),
+                color = Color.White.copy(0.45f),
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                items(
+                    count = entry.tabs.size,
+                    key = { index -> entry.tabs[index].id }
+                ) { index ->
+                    val tab = entry.tabs[index]
+                    TabGridSingleCard(
+                        tab = tab,
+                        otherTabs = allTabs.filter { it.id != tab.id },
+                        favicon = faviconProvider(tab.url),
+                        thumbnail = actions.thumbnailProvider(tab.id),
+                        onSelect = { actions.onSelectTab(tab.id) },
+                        onClose = { actions.onCloseTab(tab.id) },
+                        onGroupWithActive = { actions.onGroupWithActive(tab.id) },
+                        onGroupWithTab = { partnerId -> actions.onGroupWithTab(tab.id, partnerId) },
+                        dragState = dragState,
+                        showGroupMenu = false
+                    )
                 }
             }
         }
-        Spacer(Modifier.height(6.dp))
+    }
+}
+
+@Composable
+fun TabDragFloatingPreview(
+    tabs: List<TabItemUi>,
+    dragState: TabGridDragState,
+    faviconProvider: (String) -> Bitmap?,
+    thumbnailProvider: (Long) -> Bitmap?
+) {
+    val draggedId = dragState.draggedTabId ?: return
+    val tab = tabs.firstOrNull { it.id == draggedId } ?: return
+    val position = dragState.dragPositionInRoot
+
+    Box(Modifier.fillMaxSize()) {
+        TabGridSingleCard(
+            tab = tab,
+            otherTabs = emptyList(),
+            favicon = faviconProvider(tab.url),
+            thumbnail = thumbnailProvider(tab.id),
+            onSelect = {},
+            onClose = {},
+            onGroupWithActive = {},
+            onGroupWithTab = {},
+            enableDrag = false,
+            showGroupMenu = false,
+            modifier = Modifier
+                .width(156.dp)
+                .offset {
+                    IntOffset(
+                        (position.x - 78f).roundToInt(),
+                        (position.y - 100f).roundToInt()
+                    )
+                }
+                .shadow(12.dp, RoundedCornerShape(12.dp))
+        )
     }
 }
 

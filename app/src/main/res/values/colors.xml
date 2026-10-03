@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="pull_to_refresh_accent">#4285F4</color>
     <color name="theme_primary">#FB542B</color>
     <color name="theme_on_primary">#FFFFFFFF</color>
     <color name="theme_primary_container">#FFDAD0</color>

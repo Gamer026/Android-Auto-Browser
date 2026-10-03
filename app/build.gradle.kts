@@ -18,8 +18,8 @@ android {
         applicationId = "com.carbrowser.app"
         minSdk = 35
         targetSdk = 37
-        versionCode = 6
-        versionName = "1.0.4"
+        versionCode = 8
+        versionName = "1.0.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -113,6 +113,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.webkit)
+    implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.google.material)
     implementation(libs.androidx.car.app)
     implementation(libs.zxing.core)

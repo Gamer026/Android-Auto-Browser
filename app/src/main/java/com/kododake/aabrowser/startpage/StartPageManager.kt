@@ -1,5 +1,5 @@
 /*
- * Car Browser ù GPLv3 derivative. See LICENSE.
+ * Car Browser ? GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import com.kododake.aabrowser.data.BrowserPreferences
 import com.kododake.aabrowser.databinding.ActivityMainBinding
 import com.kododake.aabrowser.ui.compose.screens.startpage.StartPageScreenCallbacks
 import com.kododake.aabrowser.ui.compose.screens.startpage.StartPageSlotUi
+import com.kododake.aabrowser.tabs.TabThumbnailCache
 import com.kododake.aabrowser.ui.compose.screens.startpage.StartPageViews
 
 class StartPageManager(
@@ -52,6 +53,7 @@ class StartPageManager(
         fun resolveReadableTextColor(bg: Int, pr: Int, fb: Int): Int
         fun onOpenTabManager()
         fun getOpenTabCount(): Int
+        fun onHideTopSearchBar()
     }
 
     var isShowingStartPage: Boolean = false
@@ -72,6 +74,16 @@ class StartPageManager(
     val isNavigating: Boolean get() = navigationLoader.isNavigating
 
     private var composeStartPageView: View? = null
+
+    internal val requestTopSearchFocusState = mutableStateOf(false)
+
+    fun requestFocusTopSearchBar() {
+        requestTopSearchFocusState.value = true
+    }
+
+    fun clearTopSearchFocusRequest() {
+        requestTopSearchFocusState.value = false
+    }
 
     fun onDestroy() {
         navigationLoader.onDestroy()
@@ -142,6 +154,8 @@ class StartPageManager(
                 customBackgroundBitmapState = backgroundRenderer.customBackgroundBitmapState,
                 customBackgroundBitmapProvider = { backgroundRenderer.customBackgroundBitmap },
                 isNavigatingState = isNavigatingState,
+                requestTopSearchFocusState = requestTopSearchFocusState,
+                onTopSearchFocusConsumed = ::clearTopSearchFocusRequest,
                 callbacks = screenCallbacks
             )
             composeStartPageView = view
@@ -182,11 +196,13 @@ class StartPageManager(
         navigationLoader.cancelLoading()
         isShowingStartPage = true
         binding.startPageRoot.visibility = View.VISIBLE
+        callbacks.onHideTopSearchBar()
 
         refreshStartPage()
         updateStartPageDimOverlay()
         callbacks.updateNavigationButtons()
         callbacks.showMenuButtonTemporarily()
+        binding.startPageRoot.post { TabThumbnailCache.updateStartPagePlaceholder(binding.startPageRoot) }
     }
 
     fun hideStartPage(currentPageTitle: String, currentUrl: String) {

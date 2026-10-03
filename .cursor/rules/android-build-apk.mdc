@@ -1,0 +1,32 @@
+---
+description: After Android app changes, bump version, build debug APK, report output path.
+alwaysApply: true
+---
+
+# Android — Version, Build APK, Done
+
+When you modify app source, resources, or Gradle config in this project:
+
+## 1. Bump version (every build that ships fixes)
+
+In `app/build.gradle.kts` `defaultConfig`:
+
+- Increment **`versionCode`** by 1 (integer, monotonic).
+- Increment **`versionName`** patch segment for fix batches (e.g. `1.0.5` → `1.0.6`). Use minor (`1.1.0`) only when the user asks for a feature release.
+
+Do this **before** `assembleDebug`, in the same change set as the fixes.
+
+## 2. Build
+
+From repo root (PowerShell):
+
+`.\gradlew.bat assembleDebug`
+
+Confirm **BUILD SUCCESSFUL** before claiming the work is done.
+
+## 3. Report to the user
+
+- New `versionName` / `versionCode`
+- Renamed APK: `app/build/renamedApks/debug/CarBrowser-<versionName>_debug.apk`
+
+Skip version bump + build only for doc-only edits with zero APK impact. If the build fails, fix errors, keep version bumped (or bump again if retrying a new attempt), and rebuild.

@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser  GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,11 @@ object TabSwitcher {
             val prevIndex = browserTabs.indexOfFirst { it.id == prevActiveId }
             if (prevIndex >= 0) {
                 val prevTab = browserTabs[prevIndex]
-                TabThumbnailCache.capture(prevTab.id, prevTab.webView)
+                if (prevTab.currentUrl.isBlank() && binding.startPageRoot.visibility == View.VISIBLE) {
+                    TabThumbnailCache.captureFromView(prevTab.id, binding.startPageRoot)
+                } else if (prevTab.webView.width > 0 && prevTab.webView.height > 0) {
+                    TabThumbnailCache.capture(prevTab.id, prevTab.webView)
+                }
                 prevTab.webView.onPause()
                 browserTabs[prevIndex] = prevTab.copy(isActive = false)
             }
@@ -59,9 +63,9 @@ object TabSwitcher {
 
         browserTabs.forEach { tab ->
             val isVisible = (tab.id == activeTabInstance.id)
-            tab.webView.visibility = if (isVisible) View.VISIBLE else View.GONE
+            tab.refreshLayout.visibility = if (isVisible) View.VISIBLE else View.GONE
             if (isVisible) {
-                tab.webView.bringToFront()
+                tab.refreshLayout.bringToFront()
                 tab.webView.requestFocus()
                 tab.webView.invalidate()
             }

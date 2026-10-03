@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser  GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -113,11 +113,11 @@ fun ExpressiveBottomSheetContainer(
                 }
             } else if (hasOpened) {
                 if (!keepScrimOnClose) {
-                    launch { scrimAlpha.animateTo(0f, tween(250, easing = FastOutLinearInEasing)) }
+                    launch { scrimAlpha.animateTo(0f, defaultEffectsSpec) }
                 }
                 sheetOffsetY.animateTo(
                     targetValue = sheetHeight.toFloat(),
-                    animationSpec = tween(250, easing = FastOutLinearInEasing)
+                    animationSpec = defaultSpatialSpec
                 )
                 onDismissFinished()
             }
@@ -214,11 +214,11 @@ fun ExpressiveBottomSheetContainer(
                             if (sheetOffsetY.value > 140f) {
                                 onDismissRequest()
                             } else {
-                                scope.launch { sheetOffsetY.animateTo(0f, fastSpatialSpec) }
+                                scope.launch { sheetOffsetY.animateTo(0f, defaultSpatialSpec) }
                             }
                         },
                         onDragCancel = {
-                            scope.launch { sheetOffsetY.animateTo(0f, fastSpatialSpec) }
+                            scope.launch { sheetOffsetY.animateTo(0f, defaultSpatialSpec) }
                         }
                     )
                 }

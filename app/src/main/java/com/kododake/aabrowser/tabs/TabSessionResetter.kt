@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ object TabSessionResetter {
         if (tabIndex < 0) return null
 
         val oldTab = browserTabs[tabIndex]
+        binding.webViewContainer.removeView(oldTab.refreshLayout)
         oldTab.webView.releaseCompletely()
 
         val newTab = BrowserTabFactory.createTab(
@@ -57,11 +58,11 @@ object TabSessionResetter {
             onShowMenuButtonTemporarily = callbacks::showMenuButtonTemporarily
         )
 
-        binding.webViewContainer.addView(newTab.webView)
+        binding.webViewContainer.addView(newTab.refreshLayout)
         browserTabs[tabIndex] = newTab
 
-        newTab.webView.visibility = View.VISIBLE
-        newTab.webView.bringToFront()
+        newTab.refreshLayout.visibility = View.VISIBLE
+        newTab.refreshLayout.bringToFront()
         newTab.webView.requestFocus()
         newTab.webView.invalidate()
         newTab.webView.onResume()

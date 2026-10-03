@@ -120,7 +120,7 @@ class TabManager(
             onShowMenuButtonTemporarily = callbacks::showMenuButtonTemporarily
         )
 
-        binding.webViewContainer.addView(tab.webView)
+        binding.webViewContainer.addView(tab.refreshLayout)
         browserTabs.add(tab)
 
         if (activate) {
@@ -167,7 +167,7 @@ class TabManager(
         TabGroupPreferences.removeTabFromGroups(activity, removedTab.id)
         TabThumbnailCache.remove(removedTab.id)
         removedTab.speechBridge.destroy()
-        binding.webViewContainer.removeView(removedTab.webView)
+        binding.webViewContainer.removeView(removedTab.refreshLayout)
         if (removedTab.isPrivate) {
             PrivateTabCleanup.clearAfterClose(removedTab.webView)
         }
@@ -207,19 +207,39 @@ class TabManager(
 
     fun groupTabWithActive(otherTabId: Long) {
         val activeId = activeTabId ?: return
-        if (otherTabId == activeId) return
-        val activeGroup = TabGroupPreferences.getGroupId(activity, activeId)
-        val otherGroup = TabGroupPreferences.getGroupId(activity, otherTabId)
+        groupTwoTabs(otherTabId, activeId)
+    }
+
+    fun addTabToGroup(tabId: Long, groupId: String) {
+        if (browserTabs.none { it.id == tabId }) return
+        val tabsInGroup = TabGroupPreferences.tabsInGroup(activity, groupId, browserTabs.map { it.id })
+        if (tabsInGroup.isEmpty()) return
+        TabGroupPreferences.assignTabToGroup(activity, tabId, groupId)
+        refreshTabs()
+    }
+
+    fun removeTabFromGroup(tabId: Long) {
+        TabGroupPreferences.removeTabFromGroups(activity, tabId)
+        refreshTabs()
+    }
+
+    fun groupTwoTabs(tabId: Long, partnerTabId: Long) {
+        if (tabId == partnerTabId) return
+        if (browserTabs.none { it.id == tabId } || browserTabs.none { it.id == partnerTabId }) return
+
+        val activeGroup = TabGroupPreferences.getGroupId(activity, tabId)
+        val otherGroup = TabGroupPreferences.getGroupId(activity, partnerTabId)
         when {
-            activeGroup != null -> TabGroupPreferences.assignTabToGroup(activity, otherTabId, activeGroup)
-            otherGroup != null -> TabGroupPreferences.assignTabToGroup(activity, activeId, otherGroup)
+            activeGroup != null && activeGroup == otherGroup -> return
+            activeGroup != null -> TabGroupPreferences.assignTabToGroup(activity, partnerTabId, activeGroup)
+            otherGroup != null -> TabGroupPreferences.assignTabToGroup(activity, tabId, otherGroup)
             else -> {
-                val activeTab = browserTabs.firstOrNull { it.id == activeId }
-                val otherTab = browserTabs.firstOrNull { it.id == otherTabId }
-                val title = listOfNotNull(activeTab, otherTab)
+                val tabA = browserTabs.firstOrNull { it.id == tabId }
+                val tabB = browserTabs.firstOrNull { it.id == partnerTabId }
+                val title = listOfNotNull(tabA, tabB)
                     .joinToString("  ") { displayTitleForTab(it).take(24) }
                     .ifBlank { activity.getString(R.string.tab_group_default_title) }
-                TabGroupPreferences.createGroupForTabs(activity, listOf(activeId, otherTabId), title)
+                TabGroupPreferences.createGroupForTabs(activity, listOf(tabId, partnerTabId), title)
             }
         }
         refreshTabs()
@@ -231,10 +251,28 @@ class TabManager(
 
     private fun captureAllThumbnails() {
         browserTabs.forEach { tab ->
-            if (tab.webView.width > 0 && tab.webView.height > 0) {
-                TabThumbnailCache.capture(tab.id, tab.webView)
+            when {
+                tab.currentUrl.isBlank() && tab.id == activeTabId &&
+                    binding.startPageRoot.visibility == View.VISIBLE -> {
+                    TabThumbnailCache.captureFromView(tab.id, binding.startPageRoot)
+                }
+                tab.currentUrl.isBlank() -> Unit
+                tab.webView.width > 0 && tab.webView.height > 0 -> {
+                    TabThumbnailCache.capture(tab.id, tab.webView)
+                }
             }
         }
+        if (binding.startPageRoot.visibility == View.VISIBLE) {
+            TabThumbnailCache.updateStartPagePlaceholder(binding.startPageRoot)
+        }
+    }
+
+    fun getTabThumbnail(tabId: Long): android.graphics.Bitmap? {
+        val tab = browserTabs.firstOrNull { it.id == tabId }
+        if (tab != null && tab.currentUrl.isBlank()) {
+            return TabThumbnailCache.getForStartPageTab(tabId)
+        }
+        return TabThumbnailCache.get(tabId)
     }
 
     fun ungroupAllTabs(groupId: String) {
@@ -250,9 +288,10 @@ class TabManager(
     }
 
     fun closeGroupTabs(groupId: String) {
-        val allTabIds = browserTabs.map { it.id }
-        val tabsInGroup = TabGroupPreferences.tabsInGroup(activity, groupId, allTabIds)
-        tabsInGroup.forEach { tabId ->
+        while (true) {
+            val tabId = browserTabs
+                .firstOrNull { TabGroupPreferences.getGroupId(activity, it.id) == groupId }
+                ?.id ?: break
             closeTab(tabId) { callbacks.onSpeechTabClosed(tabId) }
         }
     }
@@ -284,9 +323,11 @@ class TabManager(
         binding.settingsComposeView.visibility = View.GONE
         binding.menuOverlay.visibility = View.VISIBLE
         binding.tabComposeView.visibility = View.VISIBLE
-        captureAllThumbnails()
         isVisibleState.value = true
-        refreshTabs()
+        binding.tabComposeView.post {
+            captureAllThumbnails()
+            refreshTabs()
+        }
     }
 
     fun returnToMenu() {

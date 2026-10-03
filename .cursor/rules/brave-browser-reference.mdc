@@ -1,0 +1,17 @@
+---
+description: Treat Car Browser as a Brave Android–style clone; use Brave as the UX reference when fixing UI or browser behavior.
+alwaysApply: true
+---
+
+# Brave Browser — UX Reference
+
+This project aims to mirror **Brave for Android** where the user cares about parity (tabs, groups, search/omnibox, menus, gestures, motion).
+
+When fixing or adding browser UI or behavior the user describes:
+
+1. **Prefer Brave’s patterns** over inventing new flows (e.g. bottom **Search** → top omnibox / start-page search, not tab switcher search; grouped tabs as folder cards; pull-to-refresh on web content).
+2. **Check public reference** when unsure: Brave release notes, support articles, or reputable UI breakdowns; compare layout, labels, and gestures to the user’s screenshots when provided.
+3. **Match motion and density**: sheet enter/exit, press feedback, and grid transitions should feel fluid (M3 expressive motion), not abrupt linear snaps.
+4. **Scope**: Do not copy proprietary assets or branding; match interaction and layout, use this app’s strings, icons, and theme.
+
+If Brave and the user’s request conflict, follow the **user’s latest instruction** and note the deviation briefly.

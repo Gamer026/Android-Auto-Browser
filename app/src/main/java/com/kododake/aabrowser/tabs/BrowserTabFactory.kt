@@ -22,6 +22,7 @@ import android.content.Context
 import android.net.Uri
 import android.view.View
 import android.widget.FrameLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.kododake.aabrowser.data.BrowserPreferences
@@ -48,9 +49,26 @@ object BrowserTabFactory {
         onShowMenuButtonTemporarily: () -> Unit
     ): BrowserTab {
         val tabView = android.webkit.WebView(context).apply {
-            layoutParams = FrameLayout.LayoutParams(-1, -1)
-            overScrollMode = View.OVER_SCROLL_NEVER
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
+            visibility = View.VISIBLE
+        }
+
+        val refreshLayout = SwipeRefreshLayout(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
             visibility = View.GONE
+            addView(tabView)
+            setOnRefreshListener { tabView.reload() }
+            setColorSchemeResources(
+                com.kododake.aabrowser.R.color.pull_to_refresh_accent,
+                com.kododake.aabrowser.R.color.pull_to_refresh_accent
+            )
         }
 
         lateinit var tab: BrowserTab
@@ -60,6 +78,7 @@ object BrowserTabFactory {
 
         tab = BrowserTab(
             id = tabId,
+            refreshLayout = refreshLayout,
             webView = tabView,
             speechBridge = speechBridge,
             currentUrl = initialUrl.orEmpty(),

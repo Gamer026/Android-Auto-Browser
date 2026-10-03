@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser  GPLv3 derivative. See LICENSE.
  */
 
 package com.kododake.aabrowser.tabs
@@ -53,6 +53,7 @@ object TabComposeHelper {
                         onDismiss = { manager.hideTabManager() },
                         onDismissFinished = { manager.onTabDismissFinished() },
                         onGroupWithActive = { tabId -> manager.groupTabWithActive(tabId) },
+                        onGroupWithTab = { tabId, partnerId -> manager.groupTwoTabs(tabId, partnerId) },
                         tabSearchQuery = tabSearchQuery,
                         onTabSearchQueryChange = { manager.tabSearchQueryState.value = it },
                         requestTabSearchFocus = requestTabSearchFocus,
@@ -62,7 +63,9 @@ object TabComposeHelper {
                         onRenameGroup = { groupId, newTitle -> manager.renameGroup(groupId, newTitle) },
                         onUngroupTabs = { groupId -> manager.ungroupAllTabs(groupId) },
                         onDeleteGroup = { groupId -> manager.deleteGroup(groupId) },
-                        thumbnailProvider = { tabId -> TabThumbnailCache.get(tabId) }
+                        onAddTabToGroup = { tabId, groupId -> manager.addTabToGroup(tabId, groupId) },
+                        onRemoveTabFromGroup = { tabId -> manager.removeTabFromGroup(tabId) },
+                        thumbnailProvider = { tabId -> manager.getTabThumbnail(tabId) }
                     ),
                     faviconProvider = { url ->
                         BookmarkIconUtils.resolveCachedSiteIcon(activity, url) { manager.refreshTabs() }

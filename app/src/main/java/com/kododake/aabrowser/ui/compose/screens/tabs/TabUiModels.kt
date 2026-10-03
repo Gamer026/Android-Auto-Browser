@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser  GPLv3 derivative. See LICENSE.
  */
 
 package com.kododake.aabrowser.ui.compose.screens.tabs
@@ -30,6 +30,7 @@ data class TabActions(
     val onDismiss: () -> Unit = {},
     val onDismissFinished: () -> Unit = {},
     val onGroupWithActive: (Long) -> Unit = {},
+    val onGroupWithTab: (Long, Long) -> Unit = { _, _ -> },
     val tabSearchQuery: String = "",
     val onTabSearchQueryChange: (String) -> Unit = {},
     val requestTabSearchFocus: Boolean = false,
@@ -39,5 +40,7 @@ data class TabActions(
     val onRenameGroup: (String, String) -> Unit = { _, _ -> },
     val onUngroupTabs: (String) -> Unit = {},
     val onDeleteGroup: (String) -> Unit = {},
+    val onAddTabToGroup: (Long, String) -> Unit = { _, _ -> },
+    val onRemoveTabFromGroup: (Long) -> Unit = {},
     val thumbnailProvider: (Long) -> Bitmap? = { null }
 )

@@ -99,6 +99,7 @@ class MainActivityCallbackFactory(
             provider.themeManager.resolveReadableTextColor(bg, pr, fb)
         override fun onOpenTabManager() = provider.tabManager.showTabManager(fromMenu = false)
         override fun getOpenTabCount(): Int = provider.tabManager.browserTabs.size
+        override fun onHideTopSearchBar() = provider.uiManager.hideTopSearchBar()
     }
 
     fun createTabCallbacks(): TabCallbacks = object : TabCallbacks {

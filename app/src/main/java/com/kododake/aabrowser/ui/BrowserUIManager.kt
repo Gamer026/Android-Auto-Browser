@@ -66,6 +66,21 @@ class BrowserUIManager(
 
     private var chromeController: com.kododake.aabrowser.ui.controllers.BrowserChromeController? = null
 
+    private val topSearchController by lazy {
+        com.kododake.aabrowser.ui.controllers.BrowserTopSearchController(binding) { raw ->
+            hideTopSearchBar()
+            callbacks.onNavigateToAddress(raw, closeMenuAfterNavigate = true)
+        }
+    }
+
+    fun showTopSearchBar(prefill: String = "", focus: Boolean = true) {
+        topSearchController.show(prefill, focus)
+    }
+
+    fun hideTopSearchBar() {
+        topSearchController.hide()
+    }
+
     fun setupBrowserChrome(
         onHome: () -> Unit,
         onBookmarks: () -> Unit,

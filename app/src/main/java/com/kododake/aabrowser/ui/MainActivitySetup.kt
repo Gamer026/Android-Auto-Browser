@@ -185,11 +185,13 @@ class MainActivitySetup(
                 }
             },
             onSearch = {
-                if (binding.tabComposeView.visibility == android.view.View.VISIBLE) {
-                    managers.overlayCoordinator.hideAll()
+                managers.overlayCoordinator.hideAll()
+                if (managers.startPageManager.isShowingStartPage) {
+                    managers.startPageManager.requestFocusTopSearchBar()
                 } else {
-                    managers.overlayCoordinator.hideAll()
-                    managers.tabManager.showTabManager(fromMenu = false, focusSearch = true)
+                    val url = managers.tabManager.activeTab?.currentUrl?.takeIf { it.isNotBlank() }
+                        ?: actions.getCurrentUrl()
+                    managers.uiManager.showTopSearchBar(prefill = url, focus = true)
                 }
             },
             onTabs = {

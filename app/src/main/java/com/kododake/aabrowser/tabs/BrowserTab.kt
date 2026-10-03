@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,21 @@
 
 package com.kododake.aabrowser.tabs
 
+import android.view.View
 import android.webkit.WebView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.kododake.aabrowser.web.SpeechRecognitionBridge
 
 data class BrowserTab(
     val id: Long,
+    val refreshLayout: SwipeRefreshLayout,
     val webView: WebView,
     val speechBridge: SpeechRecognitionBridge,
     val currentUrl: String = "",
     val currentTitle: String = "",
     val isActive: Boolean = false,
     val isPrivate: Boolean = false
-)
+) {
+    val contentRoot: View
+        get() = refreshLayout
+}

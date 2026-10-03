@@ -227,6 +227,7 @@
 
     <string name="tab_search_hint">Search your tabs</string>
     <string name="tab_group_with_active">Add to group with current tab</string>
+    <string name="tab_group_with_named">Group with %1$s</string>
     <string name="tab_group_count">%1$d tabs</string>
     <string name="tab_group_more">+%1$d more</string>
     <string name="tab_group_default_title">Tab group</string>
@@ -241,8 +242,11 @@
 
     <string name="bookmark_search_hint">Search your bookmarks</string>
 
-    <string name="group_menu_close">Close</string>
-    <string name="group_menu_rename">Rename</string>
+    <string name="group_menu_close">Close group</string>
+    <string name="group_menu_rename">Edit group name</string>
     <string name="group_menu_ungroup">Ungroup</string>
-    <string name="group_menu_delete">Delete</string>
+    <string name="group_menu_delete">Delete group</string>
+    <string name="group_menu_select_tabs">Select tabs</string>
+    <string name="group_menu_edit_colour">Edit group colour</string>
+    <string name="tab_drag_ungroup_hint">Drag a tab outside the group to ungroup</string>
 </resources>

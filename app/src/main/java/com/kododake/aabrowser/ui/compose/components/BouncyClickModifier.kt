@@ -46,7 +46,7 @@ fun Modifier.bouncyClickable(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.94f else 1.0f,
-        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "bouncyClickScale"
     )
 

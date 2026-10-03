@@ -48,6 +48,8 @@ fun StartPageScreen(
     hasResumePage: Boolean,
     customBackgroundBitmap: Bitmap? = null,
     isNavigating: Boolean = false,
+    requestTopSearchFocus: Boolean = false,
+    onTopSearchFocusConsumed: () -> Unit = {},
     callbacks: StartPageScreenCallbacks = StartPageScreenCallbacks(),
     modifier: Modifier = Modifier
 ) {
@@ -62,7 +64,11 @@ fun StartPageScreen(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                BraveStartPageTopBar(onNavigate = callbacks.onNavigate)
+                BraveStartPageTopBar(
+                    onNavigate = callbacks.onNavigate,
+                    requestFocus = requestTopSearchFocus,
+                    onFocusConsumed = onTopSearchFocusConsumed
+                )
 
                 Spacer(Modifier.height(12.dp))
 
