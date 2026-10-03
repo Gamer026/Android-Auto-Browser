@@ -133,6 +133,10 @@ class MainActivitySetup(
                 managers.tabManager.createNewTab(true)
                 managers.uiManager.hideMenuOverlay()
             },
+            onNewPrivateTab = {
+                managers.tabManager.createPrivateTab(activate = true)
+                managers.uiManager.hideMenuOverlay()
+            },
             onTabs = {
                 managers.overlayCoordinator.openTabs(fromMenu = true)
             },
@@ -167,20 +171,42 @@ class MainActivitySetup(
         managers.uiManager.menuHelper.setup(binding.menuComposeView, menuActions)
         managers.uiManager.setupBrowserChrome(
             onHome = {
+                if (managers.overlayCoordinator.currentScreen != OverlayNavigationCoordinator.OverlayScreen.NONE) {
+                    managers.overlayCoordinator.hideAll()
+                }
                 actions.showStartPage()
-                managers.uiManager.hideMenuOverlay()
             },
             onBookmarks = {
-                managers.overlayCoordinator.openBookmarks(fromMenu = false)
+                if (binding.bookmarkComposeView.visibility == android.view.View.VISIBLE) {
+                    managers.overlayCoordinator.hideAll()
+                } else {
+                    managers.overlayCoordinator.hideAll()
+                    managers.overlayCoordinator.openBookmarks(fromMenu = false)
+                }
             },
             onSearch = {
-                managers.uiManager.showMenuOverlay(focusAddressBar = true)
+                if (binding.tabComposeView.visibility == android.view.View.VISIBLE) {
+                    managers.overlayCoordinator.hideAll()
+                } else {
+                    managers.overlayCoordinator.hideAll()
+                    managers.tabManager.showTabManager(fromMenu = false, focusSearch = true)
+                }
             },
             onTabs = {
-                managers.tabManager.showTabManager(fromMenu = false)
+                if (binding.tabComposeView.visibility == android.view.View.VISIBLE) {
+                    managers.overlayCoordinator.hideAll()
+                } else {
+                    managers.overlayCoordinator.hideAll()
+                    managers.tabManager.showTabManager(fromMenu = false)
+                }
             },
             onMenu = {
-                managers.uiManager.showMenuOverlay()
+                if (managers.uiManager.menuHelper.stateHolder.isMenuVisible) {
+                    managers.overlayCoordinator.hideAll()
+                } else {
+                    managers.overlayCoordinator.hideAll()
+                    managers.uiManager.showMenuOverlay()
+                }
             }
         )
         managers.uiManager.menuHelper.updateVersion("v${com.kododake.aabrowser.BuildConfig.VERSION_NAME}")

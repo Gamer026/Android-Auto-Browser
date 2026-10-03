@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser  GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +27,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.kododake.aabrowser.R
 import com.kododake.aabrowser.ui.compose.components.ExpressiveBottomSheetContainer
 import com.kododake.aabrowser.ui.compose.components.ListGroupPosition
 import com.kododake.aabrowser.ui.compose.components.rememberReorderableListState
@@ -63,40 +72,56 @@ fun BookmarkManagerSheet(
         val lazyListState = rememberLazyListState()
         val reorderState = rememberReorderableListState(
             lazyListState = lazyListState,
-            headerCount = 1,
+            headerCount = 0,
             onMoveItem = { from, to -> actions.onReorderBookmarks(from, to) },
             onDragCommit = { actions.onCommitBookmarkReorder() }
         )
 
         val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+        val chromeBar = dimensionResource(R.dimen.browser_chrome_bottom_bar_height)
         val maxListHeight = (screenHeight - 110.dp).coerceAtLeast(180.dp)
+        var searchQuery by remember(isVisible) { mutableStateOf("") }
+        val filtered = remember(bookmarks, searchQuery) {
+            if (searchQuery.isBlank()) bookmarks
+            else {
+                val q = searchQuery.trim().lowercase()
+                bookmarks.filter {
+                    it.title.lowercase().contains(q) || it.url.lowercase().contains(q)
+                }
+            }
+        }
 
-        LazyColumn(
-            state = lazyListState,
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = maxListHeight)
-                .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
-                .reorderableList(reorderState),
-            verticalArrangement = Arrangement.spacedBy(3.dp)
+                .background(Color(0xFF0F1115))
+                .padding(start = 16.dp, end = 16.dp, bottom = chromeBar + 12.dp)
         ) {
-            item(key = "header") {
-                BookmarkSheetHeader(
-                    count = bookmarks.size,
-                    canAddCurrentUrl = canAddCurrentUrl,
-                    actions = actions
-                )
-                Spacer(Modifier.height(14.dp))
-            }
+            BookmarkSheetHeader(
+                count = bookmarks.size,
+                canAddCurrentUrl = canAddCurrentUrl,
+                actions = actions
+            )
+            Spacer(Modifier.height(8.dp))
+            BookmarkSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+            Spacer(Modifier.height(12.dp))
 
-            if (bookmarks.isEmpty()) {
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = maxListHeight)
+                    .reorderableList(reorderState),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+            if (filtered.isEmpty()) {
                 item(key = "empty") { BookmarkEmptyView() }
             } else {
-                itemsIndexed(bookmarks, key = { _, item -> item.url }) { index, item ->
+                itemsIndexed(filtered, key = { _, item -> item.url }) { index, item ->
                     val position = when {
-                        bookmarks.size == 1 -> ListGroupPosition.Single
+                        filtered.size == 1 -> ListGroupPosition.Single
                         index == 0 -> ListGroupPosition.Top
-                        index == bookmarks.lastIndex -> ListGroupPosition.Bottom
+                        index == filtered.lastIndex -> ListGroupPosition.Bottom
                         else -> ListGroupPosition.Middle
                     }
 
@@ -129,6 +154,7 @@ fun BookmarkManagerSheet(
                             )
                     )
                 }
+            }
             }
         }
     }

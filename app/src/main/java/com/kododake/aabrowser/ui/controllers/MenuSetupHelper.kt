@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,10 @@ package com.kododake.aabrowser.ui.controllers
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.kododake.aabrowser.ui.compose.screens.menu.BrowserMenuFab
-import com.kododake.aabrowser.ui.compose.screens.menu.BrowserMenuSheet
+import com.kododake.aabrowser.data.prefs.DownloadHistoryPreferences
+import com.kododake.aabrowser.data.prefs.NavigationHistoryPreferences
+import com.kododake.aabrowser.ui.compose.screens.menu.BraveBrowserMenuSheet
+import com.kododake.aabrowser.ui.compose.screens.menu.MenuSubscreen
 import com.kododake.aabrowser.ui.compose.screens.menu.MenuActions
 import com.kododake.aabrowser.ui.compose.screens.menu.MenuStateHolder
 
@@ -29,12 +32,14 @@ import com.kododake.aabrowser.ui.compose.screens.menu.MenuStateHolder
  */
 class MenuSetupHelper {
     val stateHolder = MenuStateHolder()
+    private var hostContext: android.content.Context? = null
 
     fun setup(composeView: ComposeView, actions: MenuActions) {
+        hostContext = composeView.context
         composeView.apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                BrowserMenuSheet(
+                BraveBrowserMenuSheet(
                     stateHolder = stateHolder,
                     actions = actions
                 )
@@ -77,10 +82,19 @@ class MenuSetupHelper {
     }
 
     fun showMenu() {
+        refreshMenuLists()
+        stateHolder.menuSubscreen = MenuSubscreen.MAIN
         stateHolder.isMenuVisible = true
     }
 
     fun hideMenu() {
         stateHolder.isMenuVisible = false
+        stateHolder.menuSubscreen = MenuSubscreen.MAIN
+    }
+
+    fun refreshMenuLists() {
+        val ctx = hostContext ?: return
+        stateHolder.historyEntries = NavigationHistoryPreferences.getEntries(ctx)
+        stateHolder.downloadEntries = DownloadHistoryPreferences.getUrls(ctx)
     }
 }

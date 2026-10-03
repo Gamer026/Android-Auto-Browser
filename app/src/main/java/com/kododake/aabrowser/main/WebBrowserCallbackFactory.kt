@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser  GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ import androidx.core.view.isVisible
 import com.kododake.aabrowser.AppConstants.REQUEST_CODE_RECORD_AUDIO
 import com.kododake.aabrowser.R
 import com.kododake.aabrowser.data.BrowserPreferences
+import com.kododake.aabrowser.data.prefs.DownloadHistoryPreferences
+import com.kododake.aabrowser.data.prefs.NavigationHistoryPreferences
 import com.kododake.aabrowser.data.SiteIconCache
 import com.kododake.aabrowser.databinding.ActivityMainBinding
 import com.kododake.aabrowser.tabs.BrowserTab
@@ -45,7 +47,9 @@ class WebBrowserCallbackFactory(
             onUrlChange = { url ->
                 activity.runOnUiThread {
                     provider.tabManager.updateTabUrl(tab.id, url)
-                    BrowserPreferences.persistUrl(activity, url)
+                    if (!tab.isPrivate) {
+                        BrowserPreferences.persistUrl(activity, url)
+                    }
                     provider.bookmarkManager.prefetchSiteIcon(url)
                     if (tab.id == provider.tabManager.activeTabId) {
                         onUrlChanged(url)
@@ -65,6 +69,19 @@ class WebBrowserCallbackFactory(
                 activity.runOnUiThread {
                     val finalTitle = title.orEmpty()
                     provider.tabManager.updateTabTitle(tab.id, finalTitle)
+                    if (!tab.isPrivate) {
+                        val historyUrl = provider.tabManager.browserTabs
+                            .firstOrNull { it.id == tab.id }
+                            ?.currentUrl
+                            .orEmpty()
+                        if (historyUrl.isNotBlank()) {
+                            NavigationHistoryPreferences.addVisit(
+                                activity,
+                                historyUrl,
+                                finalTitle.ifBlank { historyUrl }
+                            )
+                        }
+                    }
                     if (tab.id == provider.tabManager.activeTabId) {
                         onTitleChanged(finalTitle)
                         if (!provider.startPageManager.isShowingStartPage) {
@@ -98,6 +115,8 @@ class WebBrowserCallbackFactory(
             },
             onShowDownloadPrompt = { uri ->
                 activity.runOnUiThread {
+                    DownloadHistoryPreferences.addDownload(activity, uri.toString())
+                    provider.uiManager.menuHelper.refreshMenuLists()
                     provider.uiManager.openUriExternally(uri)
                 }
             },

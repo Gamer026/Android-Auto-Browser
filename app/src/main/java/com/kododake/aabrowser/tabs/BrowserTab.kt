@@ -26,5 +26,6 @@ data class BrowserTab(
     val speechBridge: SpeechRecognitionBridge,
     val currentUrl: String = "",
     val currentTitle: String = "",
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+    val isPrivate: Boolean = false
 )

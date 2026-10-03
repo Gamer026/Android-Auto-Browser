@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,13 +27,14 @@ object TabStateStore {
         browserTabs: List<BrowserTab>,
         activeTabId: Long?
     ) {
-        val entries = browserTabs.map { tab ->
+        val persistableTabs = browserTabs.filterNot { it.isPrivate }
+        val entries = persistableTabs.map { tab ->
             BrowserPreferences.TabSessionEntry(
                 url = tab.currentUrl.takeIf { u -> u.isNotBlank() },
                 title = tab.currentTitle.takeIf { t -> t.isNotBlank() }
             )
         }
-        val activeIndex = browserTabs.indexOfFirst { it.id == activeTabId }.coerceAtLeast(0)
+        val activeIndex = persistableTabs.indexOfFirst { it.id == activeTabId }.coerceAtLeast(0)
         BrowserPreferences.persistTabSession(context, entries, activeIndex)
     }
 }

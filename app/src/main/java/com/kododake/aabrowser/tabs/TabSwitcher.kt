@@ -39,6 +39,7 @@ object TabSwitcher {
             val prevIndex = browserTabs.indexOfFirst { it.id == prevActiveId }
             if (prevIndex >= 0) {
                 val prevTab = browserTabs[prevIndex]
+                TabThumbnailCache.capture(prevTab.id, prevTab.webView)
                 prevTab.webView.onPause()
                 browserTabs[prevIndex] = prevTab.copy(isActive = false)
             }

@@ -28,6 +28,7 @@ data class MenuActions(
     val onDesktopToggle: (Boolean) -> Unit = {},
     val onFullscreenToggle: (Boolean) -> Unit = {},
     val onNewTab: () -> Unit = {},
+    val onNewPrivateTab: () -> Unit = {},
     val onTabs: () -> Unit = {},
     val onBookmarks: () -> Unit = {},
     val onQrCode: () -> Unit = {},

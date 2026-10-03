@@ -1,5 +1,5 @@
 /*
- * Car Browser — GPLv3 derivative. See LICENSE.
+ * Car Browser  GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ object BrowserTabFactory {
         initialUrl: String?,
         initialTitle: String,
         activate: Boolean,
+        isPrivate: Boolean = false,
         createBrowserCallbacks: (BrowserTab) -> BrowserCallbacks,
         onRequestSpeechMicrophone: (tabId: Long, pageUrl: String?) -> Unit,
         onSanitizeJsExternalUrl: (sourceWebView: android.webkit.WebView, rawUrl: String?) -> Uri?,
@@ -63,7 +64,8 @@ object BrowserTabFactory {
             speechBridge = speechBridge,
             currentUrl = initialUrl.orEmpty(),
             currentTitle = initialTitle,
-            isActive = activate
+            isActive = activate,
+            isPrivate = isPrivate
         )
 
         configureWebView(

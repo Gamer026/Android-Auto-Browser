@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.kododake.aabrowser.data.prefs.NavigationHistoryPreferences
 
 /**
  * Observable UI state holder for the Compose browser menu sheet.
@@ -39,6 +40,9 @@ class MenuStateHolder {
     var isReturningFromSubscreen by mutableStateOf(false)
     var isFabVisible by mutableStateOf(false)
     var fabIsAddressBarMode by mutableStateOf(false)
+    var menuSubscreen by mutableStateOf(MenuSubscreen.MAIN)
+    var historyEntries by mutableStateOf<List<NavigationHistoryPreferences.HistoryEntry>>(emptyList())
+    var downloadEntries by mutableStateOf<List<String>>(emptyList())
 
     fun updateNavigationState(
         canBack: Boolean,

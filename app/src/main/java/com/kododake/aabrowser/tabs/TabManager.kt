@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ import com.kododake.aabrowser.bookmarks.BookmarkManager
 import com.kododake.aabrowser.data.BrowserPreferences
 import com.kododake.aabrowser.databinding.ActivityMainBinding
 import com.kododake.aabrowser.model.UserAgentProfile
+import com.kododake.aabrowser.data.prefs.TabGroupPreferences
+import com.kododake.aabrowser.ui.compose.screens.tabs.TabGridEntry
 import com.kododake.aabrowser.ui.compose.screens.tabs.TabItemUi
 import com.kododake.aabrowser.web.UserAgentManager
 import com.kododake.aabrowser.web.releaseCompletely
@@ -51,6 +53,9 @@ class TabManager(
     internal val isVisibleState = mutableStateOf(false)
     internal val keepScrimState = mutableStateOf(false)
     internal val tabsState = mutableStateOf<List<TabItemUi>>(emptyList())
+    internal val gridEntriesState = mutableStateOf<List<TabGridEntry>>(emptyList())
+    internal val tabSearchQueryState = mutableStateOf("")
+    internal val requestTabSearchFocusState = mutableStateOf(false)
 
     val activeTab: BrowserTab?
         get() = browserTabs.firstOrNull { it.id == activeTabId }
@@ -88,7 +93,12 @@ class TabManager(
         )
     }
 
-    fun createBrowserTab(initialUrl: String?, initialTitle: String = "", activate: Boolean): BrowserTab? {
+    fun createBrowserTab(
+        initialUrl: String?,
+        initialTitle: String = "",
+        activate: Boolean,
+        isPrivate: Boolean = false
+    ): BrowserTab? {
         if (browserTabs.size >= BrowserPreferences.MAX_OPEN_TABS) {
             val message = activity.getString(R.string.tab_manager_max_tabs, BrowserPreferences.MAX_OPEN_TABS)
             Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
@@ -102,6 +112,7 @@ class TabManager(
             initialUrl = initialUrl,
             initialTitle = initialTitle,
             activate = activate,
+            isPrivate = isPrivate,
             createBrowserCallbacks = callbacks::buildBrowserCallbacks,
             onRequestSpeechMicrophone = callbacks::requestSpeechRecognitionMicrophoneAccess,
             onSanitizeJsExternalUrl = callbacks::sanitizeJsExternalUrl,
@@ -126,6 +137,12 @@ class TabManager(
         return createBrowserTab(initialUrl, if (initialUrl.isNullOrBlank()) activity.getString(R.string.tab_manager_blank_title) else "", activate)
     }
 
+    fun createPrivateTab(activate: Boolean): BrowserTab? {
+        val initialUrl = BrowserPreferences.getHomePageUrl(activity)
+        val title = activity.getString(R.string.tab_private_title)
+        return createBrowserTab(initialUrl, title, activate, isPrivate = true)
+    }
+
     fun switchToTab(tabId: Long) {
         TabSwitcher.switchToTab(
             tabId = tabId,
@@ -147,8 +164,13 @@ class TabManager(
         val removedTab = browserTabs.removeAt(index)
         onSpeechTabClosed()
 
+        TabGroupPreferences.removeTabFromGroups(activity, removedTab.id)
+        TabThumbnailCache.remove(removedTab.id)
         removedTab.speechBridge.destroy()
         binding.webViewContainer.removeView(removedTab.webView)
+        if (removedTab.isPrivate) {
+            PrivateTabCleanup.clearAfterClose(removedTab.webView)
+        }
         removedTab.webView.releaseCompletely()
 
         if (browserTabs.isEmpty()) {
@@ -175,9 +197,68 @@ class TabManager(
                 id = tab.id,
                 title = displayTitleForTab(tab),
                 url = tab.currentUrl,
-                isActive = (tab.id == activeTabId)
+                isActive = (tab.id == activeTabId),
+                isPrivate = tab.isPrivate,
+                groupId = TabGroupPreferences.getGroupId(activity, tab.id)
             )
         }
+        gridEntriesState.value = TabGridBuilder.build(activity, tabsState.value)
+    }
+
+    fun groupTabWithActive(otherTabId: Long) {
+        val activeId = activeTabId ?: return
+        if (otherTabId == activeId) return
+        val activeGroup = TabGroupPreferences.getGroupId(activity, activeId)
+        val otherGroup = TabGroupPreferences.getGroupId(activity, otherTabId)
+        when {
+            activeGroup != null -> TabGroupPreferences.assignTabToGroup(activity, otherTabId, activeGroup)
+            otherGroup != null -> TabGroupPreferences.assignTabToGroup(activity, activeId, otherGroup)
+            else -> {
+                val activeTab = browserTabs.firstOrNull { it.id == activeId }
+                val otherTab = browserTabs.firstOrNull { it.id == otherTabId }
+                val title = listOfNotNull(activeTab, otherTab)
+                    .joinToString(" ù ") { displayTitleForTab(it).take(24) }
+                    .ifBlank { activity.getString(R.string.tab_group_default_title) }
+                TabGroupPreferences.createGroupForTabs(activity, listOf(activeId, otherTabId), title)
+            }
+        }
+        refreshTabs()
+    }
+
+    fun clearTabSearchFocusRequest() {
+        requestTabSearchFocusState.value = false
+    }
+
+    private fun captureAllThumbnails() {
+        browserTabs.forEach { tab ->
+            if (tab.webView.width > 0 && tab.webView.height > 0) {
+                TabThumbnailCache.capture(tab.id, tab.webView)
+            }
+        }
+    }
+
+    fun ungroupAllTabs(groupId: String) {
+        val allTabIds = browserTabs.map { it.id }
+        val tabsInGroup = TabGroupPreferences.tabsInGroup(activity, groupId, allTabIds)
+        tabsInGroup.forEach { TabGroupPreferences.removeTabFromGroups(activity, it) }
+        refreshTabs()
+    }
+
+    fun renameGroup(groupId: String, newTitle: String) {
+        TabGroupPreferences.setGroupTitle(activity, groupId, newTitle)
+        refreshTabs()
+    }
+
+    fun closeGroupTabs(groupId: String) {
+        val allTabIds = browserTabs.map { it.id }
+        val tabsInGroup = TabGroupPreferences.tabsInGroup(activity, groupId, allTabIds)
+        tabsInGroup.forEach { tabId ->
+            closeTab(tabId) { callbacks.onSpeechTabClosed(tabId) }
+        }
+    }
+
+    fun deleteGroup(groupId: String) {
+        closeGroupTabs(groupId)
     }
 
     fun displayTitleForTab(tab: BrowserTab): String {
@@ -188,8 +269,14 @@ class TabManager(
         }
     }
 
-    fun showTabManager(fromMenu: Boolean = false) {
+    fun showTabManager(fromMenu: Boolean = false, focusSearch: Boolean = false) {
         isOpenedFromMenuState.value = fromMenu
+        if (focusSearch) {
+            tabSearchQueryState.value = ""
+            requestTabSearchFocusState.value = true
+        } else {
+            requestTabSearchFocusState.value = false
+        }
         binding.menuComposeView.visibility = View.GONE
         binding.bookmarkComposeView.visibility = View.GONE
         binding.qrCodeComposeView.visibility = View.GONE
@@ -197,6 +284,7 @@ class TabManager(
         binding.settingsComposeView.visibility = View.GONE
         binding.menuOverlay.visibility = View.VISIBLE
         binding.tabComposeView.visibility = View.VISIBLE
+        captureAllThumbnails()
         isVisibleState.value = true
         refreshTabs()
     }

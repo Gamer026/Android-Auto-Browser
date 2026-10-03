@@ -1,18 +1,5 @@
 /*
  * Car Browser — GPLv3 derivative. See LICENSE.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://gnu.org>.
  */
 
 package com.kododake.aabrowser.tabs
@@ -38,6 +25,9 @@ object TabComposeHelper {
                 val isVisible by manager.isVisibleState
                 val tabs by manager.tabsState
                 val keepScrim by manager.keepScrimState
+                val gridEntries by manager.gridEntriesState
+                val tabSearchQuery by manager.tabSearchQueryState
+                val requestTabSearchFocus by manager.requestTabSearchFocusState
 
                 TabManagerSheet(
                     isVisible = isVisible,
@@ -61,7 +51,18 @@ object TabComposeHelper {
                             }
                         },
                         onDismiss = { manager.hideTabManager() },
-                        onDismissFinished = { manager.onTabDismissFinished() }
+                        onDismissFinished = { manager.onTabDismissFinished() },
+                        onGroupWithActive = { tabId -> manager.groupTabWithActive(tabId) },
+                        tabSearchQuery = tabSearchQuery,
+                        onTabSearchQueryChange = { manager.tabSearchQueryState.value = it },
+                        requestTabSearchFocus = requestTabSearchFocus,
+                        onTabSearchFocusConsumed = { manager.clearTabSearchFocusRequest() },
+                        gridEntries = gridEntries,
+                        onCloseGroup = { groupId -> manager.closeGroupTabs(groupId) },
+                        onRenameGroup = { groupId, newTitle -> manager.renameGroup(groupId, newTitle) },
+                        onUngroupTabs = { groupId -> manager.ungroupAllTabs(groupId) },
+                        onDeleteGroup = { groupId -> manager.deleteGroup(groupId) },
+                        thumbnailProvider = { tabId -> TabThumbnailCache.get(tabId) }
                     ),
                     faviconProvider = { url ->
                         BookmarkIconUtils.resolveCachedSiteIcon(activity, url) { manager.refreshTabs() }

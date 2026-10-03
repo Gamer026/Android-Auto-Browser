@@ -1,28 +1,24 @@
 /*
  * Car Browser � GPLv3 derivative. See LICENSE.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://gnu.org>.
  */
 
 package com.kododake.aabrowser.ui.compose.screens.tabs
+
+import android.graphics.Bitmap
 
 data class TabItemUi(
     val id: Long,
     val title: String,
     val url: String,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val isPrivate: Boolean = false,
+    val groupId: String? = null
 )
+
+sealed class TabGridEntry {
+    data class Single(val tab: TabItemUi) : TabGridEntry()
+    data class Group(val groupId: String, val title: String, val tabs: List<TabItemUi>) : TabGridEntry()
+}
 
 data class TabActions(
     val onSelectTab: (Long) -> Unit = {},
@@ -30,9 +26,18 @@ data class TabActions(
     val onNewTab: () -> Unit = {},
     val onReorderTabs: (Int, Int) -> Unit = { _, _ -> },
     val onCommitTabReorder: () -> Unit = {},
-    /** Called by the back/close button in header → may return to menu */
     val onClose: () -> Unit = {},
-    /** Called by drag dismiss or scrim tap → always closes completely, no menu return */
     val onDismiss: () -> Unit = {},
-    val onDismissFinished: () -> Unit = {}
+    val onDismissFinished: () -> Unit = {},
+    val onGroupWithActive: (Long) -> Unit = {},
+    val tabSearchQuery: String = "",
+    val onTabSearchQueryChange: (String) -> Unit = {},
+    val requestTabSearchFocus: Boolean = false,
+    val onTabSearchFocusConsumed: () -> Unit = {},
+    val gridEntries: List<TabGridEntry> = emptyList(),
+    val onCloseGroup: (String) -> Unit = {},
+    val onRenameGroup: (String, String) -> Unit = { _, _ -> },
+    val onUngroupTabs: (String) -> Unit = {},
+    val onDeleteGroup: (String) -> Unit = {},
+    val thumbnailProvider: (Long) -> Bitmap? = { null }
 )
