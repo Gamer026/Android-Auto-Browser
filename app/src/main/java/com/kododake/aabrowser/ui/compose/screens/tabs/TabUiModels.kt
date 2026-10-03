@@ -17,13 +17,19 @@ data class TabItemUi(
 
 sealed class TabGridEntry {
     data class Single(val tab: TabItemUi) : TabGridEntry()
-    data class Group(val groupId: String, val title: String, val tabs: List<TabItemUi>) : TabGridEntry()
+    data class Group(
+        val groupId: String,
+        val title: String,
+        val tabs: List<TabItemUi>,
+        val colorIndex: Int = 0
+    ) : TabGridEntry()
 }
 
 data class TabActions(
     val onSelectTab: (Long) -> Unit = {},
     val onCloseTab: (Long) -> Unit = {},
     val onNewTab: () -> Unit = {},
+    val onNewTabInGroup: (String) -> Unit = {},
     val onReorderTabs: (Int, Int) -> Unit = { _, _ -> },
     val onCommitTabReorder: () -> Unit = {},
     val onClose: () -> Unit = {},
@@ -42,5 +48,6 @@ data class TabActions(
     val onDeleteGroup: (String) -> Unit = {},
     val onAddTabToGroup: (Long, String) -> Unit = { _, _ -> },
     val onRemoveTabFromGroup: (Long) -> Unit = {},
+    val onCycleGroupColor: (String) -> Unit = {},
     val thumbnailProvider: (Long) -> Bitmap? = { null }
 )

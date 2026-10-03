@@ -41,6 +41,7 @@ object TabComposeHelper {
                             manager.closeTab(tabId) { callbacks.onSpeechTabClosed(tabId) }
                         },
                         onNewTab = { manager.dismissTabManagerToPage { manager.createNewTab(true) } },
+                        onNewTabInGroup = { groupId -> manager.createNewTabInGroup(groupId, activate = false) },
                         onReorderTabs = { from, to -> manager.reorderTabs(from, to) },
                         onCommitTabReorder = { manager.commitTabReorder() },
                         onClose = {
@@ -63,6 +64,7 @@ object TabComposeHelper {
                         onRenameGroup = { groupId, newTitle -> manager.renameGroup(groupId, newTitle) },
                         onUngroupTabs = { groupId -> manager.ungroupAllTabs(groupId) },
                         onDeleteGroup = { groupId -> manager.deleteGroup(groupId) },
+                        onCycleGroupColor = { groupId -> manager.cycleGroupColor(groupId) },
                         onAddTabToGroup = { tabId, groupId -> manager.addTabToGroup(tabId, groupId) },
                         onRemoveTabFromGroup = { tabId -> manager.removeTabFromGroup(tabId) },
                         thumbnailProvider = { tabId -> manager.getTabThumbnail(tabId) }

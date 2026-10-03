@@ -15,3 +15,7 @@ local.properties
 icon.png
 /test
 /tmp
+/.tmp-brave-apk
+
+# Brave APK reference extracts (proprietary — do not commit)
+/reference/brave-apk-extract/

@@ -12,14 +12,20 @@ import com.kododake.aabrowser.ui.compose.screens.tabs.TabItemUi
 object TabGridBuilder {
     fun build(context: Context, tabs: List<TabItemUi>): List<TabGridEntry> {
         if (tabs.isEmpty()) return emptyList()
-        val grouped = tabs.filter { !it.groupId.isNullOrBlank() }.groupBy { it.groupId!! }
-        val ungrouped = tabs.filter { it.groupId.isNullOrBlank() }
+        val seenGroups = mutableSetOf<String>()
         val entries = mutableListOf<TabGridEntry>()
-        grouped.forEach { (groupId, groupTabs) ->
-            val title = TabGroupPreferences.getGroupTitle(context, groupId)
-            entries.add(TabGridEntry.Group(groupId, title, groupTabs))
+        for (tab in tabs) {
+            val groupId = tab.groupId
+            if (groupId.isNullOrBlank()) {
+                entries.add(TabGridEntry.Single(tab))
+            } else if (groupId !in seenGroups) {
+                seenGroups.add(groupId)
+                val groupTabs = tabs.filter { it.groupId == groupId }
+                val title = TabGroupPreferences.getGroupTitle(context, groupId)
+                val colorIndex = TabGroupPreferences.getGroupColorIndex(context, groupId) ?: 0
+                entries.add(TabGridEntry.Group(groupId, title, groupTabs, colorIndex))
+            }
         }
-        ungrouped.forEach { entries.add(TabGridEntry.Single(it)) }
         return entries
     }
 }

@@ -18,8 +18,8 @@ android {
         applicationId = "com.carbrowser.app"
         minSdk = 35
         targetSdk = 37
-        versionCode = 8
-        versionName = "1.0.6"
+        versionCode = 10
+        versionName = "1.0.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -137,6 +137,16 @@ class TabManager(
         return createBrowserTab(initialUrl, if (initialUrl.isNullOrBlank()) activity.getString(R.string.tab_manager_blank_title) else "", activate)
     }
 
+    fun createNewTabInGroup(groupId: String, activate: Boolean = false): BrowserTab? {
+        val tab = createNewTab(activate = false) ?: return null
+        TabGroupPreferences.assignTabToGroup(activity, tab.id, groupId)
+        refreshTabs()
+        if (activate) {
+            switchToTab(tab.id)
+        }
+        return tab
+    }
+
     fun createPrivateTab(activate: Boolean): BrowserTab? {
         val initialUrl = BrowserPreferences.getHomePageUrl(activity)
         val title = activity.getString(R.string.tab_private_title)
@@ -279,11 +289,17 @@ class TabManager(
         val allTabIds = browserTabs.map { it.id }
         val tabsInGroup = TabGroupPreferences.tabsInGroup(activity, groupId, allTabIds)
         tabsInGroup.forEach { TabGroupPreferences.removeTabFromGroups(activity, it) }
+        TabGroupPreferences.removeGroupMetadata(activity, groupId)
         refreshTabs()
     }
 
     fun renameGroup(groupId: String, newTitle: String) {
         TabGroupPreferences.setGroupTitle(activity, groupId, newTitle)
+        refreshTabs()
+    }
+
+    fun cycleGroupColor(groupId: String) {
+        TabGroupPreferences.cycleGroupColorIndex(activity, groupId, TabGroupColors.palette.size)
         refreshTabs()
     }
 
@@ -298,6 +314,7 @@ class TabManager(
 
     fun deleteGroup(groupId: String) {
         closeGroupTabs(groupId)
+        TabGroupPreferences.removeGroupMetadata(activity, groupId)
     }
 
     fun displayTitleForTab(tab: BrowserTab): String {

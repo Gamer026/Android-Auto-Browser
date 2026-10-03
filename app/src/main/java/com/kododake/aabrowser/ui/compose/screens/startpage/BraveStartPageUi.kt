@@ -57,7 +57,7 @@ import com.kododake.aabrowser.ui.compose.components.BraveSearchBar
 import com.kododake.aabrowser.ui.compose.components.bouncyClickable
 
 private val BraveSearchBarColor = Color(0xFF21262D)
-private val BraveBottomBarColor = Color(0xFF0D0F12)
+private val BraveBottomBarColor = Color(0xFF202124)
 private val BraveShortcutPanelColor = Color(0xCC1A1D24)
 private val BraveOrange = Color(0xFFFB542B)
 

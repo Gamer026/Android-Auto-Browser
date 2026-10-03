@@ -101,7 +101,7 @@ import com.kododake.aabrowser.ui.compose.components.ExpressiveBottomSheetContain
 
 
 
-private val BraveDarkBg = Color(0xFF131316)
+private val BraveDarkBg = Color(0xFF202124)
 
 
 
@@ -328,6 +328,8 @@ fun TabManagerSheet(
                                         onUngroupTabs = { actions.onUngroupTabs(entry.groupId) },
 
                                         onDeleteGroup = { actions.onDeleteGroup(entry.groupId) },
+
+                                        onCycleGroupColor = { actions.onCycleGroupColor(entry.groupId) },
 
                                         dragState = dragState
 

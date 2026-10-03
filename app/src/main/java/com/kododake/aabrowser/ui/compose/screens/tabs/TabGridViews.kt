@@ -75,12 +75,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.kododake.aabrowser.R
+import com.kododake.aabrowser.tabs.TabGroupColors
 import kotlin.math.roundToInt
 import com.kododake.aabrowser.ui.compose.components.bouncyClickable
 
 private val BraveCardBg = Color(0xFF1B1D21)
 private val BraveCardBorder = Color(0xFF3A3D42)
-private val BraveSearchBg = Color(0xFF2B2D31)
+private val BraveSearchBg = Color(0xFF35363A)
 private val BraveBlueBorder = Color(0xFF4285F4)
 private val BraveGroupBg = Color(0xFF2952C8)
 private val BraveGroupAccent = Color(0xFF6AA4F8)
@@ -275,6 +276,7 @@ fun TabGridGroupCard(
     onRenameGroup: (String) -> Unit,
     onUngroupTabs: () -> Unit,
     onDeleteGroup: () -> Unit,
+    onCycleGroupColor: () -> Unit = {},
     modifier: Modifier = Modifier,
     dragState: TabGridDragState? = null
 ) {
@@ -293,6 +295,8 @@ fun TabGridGroupCard(
     val previewTabs = if (hasOverflow) entry.tabs.take(3) else entry.tabs.take(4)
     val extraCount = if (hasOverflow) entry.tabs.size - 3 else 0
     val isDropTarget = dragState?.isHighlighted(TabDropTarget.Group(entry.groupId)) == true
+    val groupColor = TabGroupColors.colorForIndex(entry.colorIndex)
+    val groupAccent = groupColor.copy(alpha = 0.85f)
 
     Column(
         modifier = modifier
@@ -305,10 +309,10 @@ fun TabGridGroupCard(
             )
             .shadow(if (isDropTarget) 8.dp else 0.dp, RoundedCornerShape(14.dp))
             .clip(RoundedCornerShape(14.dp))
-            .background(BraveGroupBg)
+            .background(groupColor)
             .border(
                 width = if (isDropTarget) 2.dp else 1.dp,
-                color = if (isDropTarget) BraveDropHighlight else BraveGroupBg.copy(0.85f),
+                color = if (isDropTarget) BraveDropHighlight else groupAccent,
                 shape = RoundedCornerShape(14.dp)
             )
             .bouncyClickable { onOpenGroup() }
@@ -317,7 +321,7 @@ fun TabGridGroupCard(
             Modifier.fillMaxWidth().padding(start = 10.dp, end = 4.dp, top = 8.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(Modifier.size(14.dp).clip(CircleShape).background(BraveGroupAccent))
+            Box(Modifier.size(14.dp).clip(CircleShape).background(Color.White.copy(0.9f)))
             Spacer(Modifier.width(8.dp))
             Text(
                 stringResource(R.string.tab_group_count, entry.tabs.size),
@@ -338,6 +342,7 @@ fun TabGridGroupCard(
                     onRename = { menuExpanded = false; showRenameDialog = true },
                     onUngroup = { menuExpanded = false; onUngroupTabs() },
                     onDelete = { menuExpanded = false; onDeleteGroup() },
+                    onEditColour = { menuExpanded = false; onCycleGroupColor() },
                     showBraveExtras = false
                 )
             }
@@ -354,7 +359,7 @@ fun TabGridGroupCard(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                 GroupPreviewCell(previewTabs.getOrNull(2), faviconProvider, thumbnailProvider, Modifier.weight(1f))
                 if (extraCount > 0) {
-                    GroupOverflowCell(extraCount, Modifier.weight(1f))
+                    GroupOverflowCell(extraCount, groupColor, Modifier.weight(1f))
                 } else {
                     GroupPreviewCell(previewTabs.getOrNull(3), faviconProvider, thumbnailProvider, Modifier.weight(1f))
                 }
@@ -405,12 +410,12 @@ private fun GroupPreviewCell(
 }
 
 @Composable
-private fun GroupOverflowCell(extraCount: Int, modifier: Modifier) {
+private fun GroupOverflowCell(extraCount: Int, groupColor: Color, modifier: Modifier) {
     Box(
         modifier = modifier
             .aspectRatio(0.72f)
             .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF3B6FD6)),
+            .background(groupColor.copy(alpha = 0.75f)),
         contentAlignment = Alignment.Center
     ) {
         Text("+$extraCount", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
@@ -425,6 +430,7 @@ private fun GroupOverflowMenu(
     onRename: () -> Unit,
     onUngroup: () -> Unit,
     onDelete: () -> Unit,
+    onEditColour: () -> Unit,
     showBraveExtras: Boolean
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
@@ -440,13 +446,11 @@ private fun GroupOverflowMenu(
             leadingIcon = { Icon(Icons.Outlined.DriveFileRenameOutline, contentDescription = null) },
             onClick = onRename
         )
-        if (showBraveExtras) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.group_menu_edit_colour)) },
-                leadingIcon = { Icon(Icons.Outlined.Colorize, contentDescription = null) },
-                onClick = onDismiss
-            )
-        }
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.group_menu_edit_colour)) },
+            leadingIcon = { Icon(Icons.Outlined.Colorize, contentDescription = null) },
+            onClick = onEditColour
+        )
         DropdownMenuItem(
             text = { Text(stringResource(R.string.group_menu_close)) },
             leadingIcon = { Icon(Icons.Outlined.Close, contentDescription = null) },
@@ -491,6 +495,8 @@ fun TabGroupDetailScreen(
         )
     }
 
+    val groupColor = TabGroupColors.colorForIndex(entry.colorIndex)
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -502,6 +508,7 @@ fun TabGroupDetailScreen(
                 .padding(horizontal = 10.dp, vertical = 8.dp)
                 .clip(RoundedCornerShape(20.dp))
                 .background(BraveGroupPanelBg)
+                .border(2.dp, groupColor.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
         ) {
             Row(
                 Modifier
@@ -512,7 +519,7 @@ fun TabGroupDetailScreen(
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.tab_manager_back), tint = Color.White)
                 }
-                Box(Modifier.size(14.dp).clip(CircleShape).background(BraveGroupAccent))
+                Box(Modifier.size(14.dp).clip(CircleShape).background(groupColor))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     stringResource(R.string.tab_group_count, entry.tabs.size),
@@ -522,7 +529,7 @@ fun TabGroupDetailScreen(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                IconButton(onClick = actions.onNewTab) {
+                IconButton(onClick = { actions.onNewTabInGroup(entry.groupId) }) {
                     Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.tab_manager_add), tint = Color.White)
                 }
                 Box {
@@ -547,6 +554,10 @@ fun TabGroupDetailScreen(
                             menuExpanded = false
                             actions.onDeleteGroup(entry.groupId)
                             onBack()
+                        },
+                        onEditColour = {
+                            menuExpanded = false
+                            actions.onCycleGroupColor(entry.groupId)
                         },
                         showBraveExtras = true
                     )

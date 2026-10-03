@@ -27,7 +27,6 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DesktopWindows
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Fullscreen
-import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.QrCode2
 import androidx.compose.material.icons.rounded.Refresh
@@ -55,7 +54,7 @@ import com.kododake.aabrowser.R
 import com.kododake.aabrowser.ui.compose.components.ExpressiveBottomSheetContainer
 import com.kododake.aabrowser.ui.compose.components.bouncyClickable
 
-private val BraveMenuBg = Color(0xFF1B1D21)
+private val BraveMenuBg = Color(0xFF202124)
 private val BraveDivider = Color(0xFF2E3035)
 private val BraveItemText = Color(0xFFE8E8E8)
 private val BraveSubText = Color(0xFF9A9DA3)
@@ -106,12 +105,12 @@ private fun BraveMainMenu(actions: MenuActions, stateHolder: MenuStateHolder) {
         BraveMenuItem(Icons.Rounded.DarkMode, stringResource(R.string.menu_new_private_tab)) {
             actions.onNewPrivateTab()
         }
-        BraveDividerLine()
-
-        BraveMenuItem(Icons.Rounded.GridView, stringResource(R.string.tab_group_with_active)) {
-            actions.onTabs()
-        }
         BraveSectionDivider()
+
+        BraveMenuItem(Icons.Rounded.Bookmark, stringResource(R.string.menu_bookmarks)) {
+            actions.onBookmarks()
+        }
+        BraveDividerLine()
 
         BraveMenuItem(Icons.Rounded.History, stringResource(R.string.menu_history)) {
             stateHolder.menuSubscreen = MenuSubscreen.HISTORY
@@ -120,11 +119,6 @@ private fun BraveMainMenu(actions: MenuActions, stateHolder: MenuStateHolder) {
 
         BraveMenuItem(Icons.Rounded.Download, stringResource(R.string.menu_downloads)) {
             stateHolder.menuSubscreen = MenuSubscreen.DOWNLOADS
-        }
-        BraveDividerLine()
-
-        BraveMenuItem(Icons.Rounded.Bookmark, stringResource(R.string.menu_bookmarks)) {
-            actions.onBookmarks()
         }
         BraveSectionDivider()
 

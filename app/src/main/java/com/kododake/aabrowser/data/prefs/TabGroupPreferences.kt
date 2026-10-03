@@ -11,6 +11,7 @@ object TabGroupPreferences {
     private const val PREFS = "tab_group_prefs"
     private const val KEY_TAB_TO_GROUP = "tab_to_group"
     private const val KEY_GROUP_TITLES = "group_titles"
+    private const val KEY_GROUP_COLOR_INDEX = "group_color_index"
 
     fun getGroupId(context: Context, tabId: Long): String? {
         val map = loadTabToGroup(context)
@@ -42,7 +43,37 @@ object TabGroupPreferences {
         val groupId = "group_${System.currentTimeMillis()}"
         tabIds.forEach { assignTabToGroup(context, it, groupId) }
         setGroupTitle(context, groupId, title)
+        if (getGroupColorIndex(context, groupId) == null) {
+            setGroupColorIndex(context, groupId, 0)
+        }
         return groupId
+    }
+
+    fun getGroupColorIndex(context: Context, groupId: String): Int? {
+        val map = loadGroupColorIndices(context)
+        return map[groupId]
+    }
+
+    fun setGroupColorIndex(context: Context, groupId: String, index: Int) {
+        val map = loadGroupColorIndices(context).toMutableMap()
+        map[groupId] = index
+        saveGroupColorIndices(context, map)
+    }
+
+    fun cycleGroupColorIndex(context: Context, groupId: String, paletteSize: Int): Int {
+        val current = getGroupColorIndex(context, groupId) ?: 0
+        val next = (current + 1) % paletteSize.coerceAtLeast(1)
+        setGroupColorIndex(context, groupId, next)
+        return next
+    }
+
+    fun removeGroupMetadata(context: Context, groupId: String) {
+        val titles = loadGroupTitles(context).toMutableMap()
+        titles.remove(groupId)
+        saveGroupTitles(context, titles)
+        val colors = loadGroupColorIndices(context).toMutableMap()
+        colors.remove(groupId)
+        saveGroupColorIndices(context, colors)
     }
 
     fun tabsInGroup(context: Context, groupId: String, allTabIds: List<Long>): List<Long> {
@@ -95,6 +126,28 @@ object TabGroupPreferences {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_GROUP_TITLES, json.toString())
+            .apply()
+    }
+
+    private fun loadGroupColorIndices(context: Context): Map<String, Int> {
+        val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY_GROUP_COLOR_INDEX, null) ?: return emptyMap()
+        return runCatching {
+            val json = JSONObject(raw)
+            buildMap {
+                json.keys().forEach { key ->
+                    put(key, json.getInt(key))
+                }
+            }
+        }.getOrDefault(emptyMap())
+    }
+
+    private fun saveGroupColorIndices(context: Context, map: Map<String, Int>) {
+        val json = JSONObject()
+        map.forEach { (k, v) -> json.put(k, v) }
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_GROUP_COLOR_INDEX, json.toString())
             .apply()
     }
 }
