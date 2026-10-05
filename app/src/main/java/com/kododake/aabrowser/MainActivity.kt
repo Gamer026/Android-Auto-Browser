@@ -1,5 +1,5 @@
 /*
- * Car Browser ó GPLv3 derivative. See LICENSE.
+ * Car Browser ù GPLv3 derivative. See LICENSE.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,10 +38,15 @@ import com.kododake.aabrowser.main.WebViewWarmupHelper
 import com.kododake.aabrowser.model.QuickActionButtonMode
 import com.kododake.aabrowser.tabs.BrowserTab
 import com.kododake.aabrowser.ui.MainActivitySetup
+import com.kododake.aabrowser.car.CarDrivingUiState
+import com.kododake.aabrowser.car.CarDrivingUxMonitor
+import com.kododake.aabrowser.car.CarDrivingUxRegistry
 import com.kododake.aabrowser.ui.controllers.NavigationButtonUpdater
 import com.kododake.aabrowser.ui.controllers.ProgressIndicatorController
 
 class MainActivity : AppCompatActivity(), MainActivityCallbackFactory.CallbackHost {
+
+    private var carDrivingUxMonitor: CarDrivingUxMonitor? = null
 
     private lateinit var binding: ActivityMainBinding
 
@@ -114,7 +119,7 @@ class MainActivity : AppCompatActivity(), MainActivityCallbackFactory.CallbackHo
 
         setupUi()
         setupBackPressHandling()
-
+        startCarDrivingUxMonitor()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -144,6 +149,9 @@ class MainActivity : AppCompatActivity(), MainActivityCallbackFactory.CallbackHo
     }
 
     override fun onDestroy() {
+        carDrivingUxMonitor?.stop()
+        carDrivingUxMonitor = null
+        CarDrivingUxRegistry.reset()
         menuFabController.cleanup()
         managers.uiManager.exitFullscreen()
         managers.startPageManager.onDestroy()
@@ -188,6 +196,17 @@ class MainActivity : AppCompatActivity(), MainActivityCallbackFactory.CallbackHo
         menuFabController.showMenuButtonTemporarily()
         managers.bookmarkManager.refreshBookmarks()
         managers.uiManager.applyQuickActionButtonPreferences()
+    }
+
+    private fun startCarDrivingUxMonitor() {
+        carDrivingUxMonitor = CarDrivingUxMonitor(
+            context = this,
+            onStateChanged = ::onCarDrivingUxChanged,
+        ).also { it.start() }
+    }
+
+    private fun onCarDrivingUxChanged(state: CarDrivingUiState) {
+        managers.uiManager.applyCarDrivingUxState(state)
     }
 
     private fun setupBackPressHandling() {

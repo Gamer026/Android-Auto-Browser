@@ -36,6 +36,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kododake.aabrowser.R
+import com.kododake.aabrowser.car.CarDrivingUxRegistry
 
 @Composable
 fun BraveSearchBar(
@@ -60,9 +61,10 @@ fun BraveSearchBar(
     }
     val pillShape = RoundedCornerShape(28.dp)
     val focusRequester = remember { FocusRequester() }
+    val keyboardBlocked by CarDrivingUxRegistry.keyboardBlocked
 
-    LaunchedEffect(requestFocus) {
-        if (requestFocus) {
+    LaunchedEffect(requestFocus, keyboardBlocked) {
+        if (requestFocus && !keyboardBlocked) {
             focusRequester.requestFocus()
             onFocusConsumed()
         }
@@ -87,6 +89,7 @@ fun BraveSearchBar(
             BasicTextField(
                 value = queryText,
                 onValueChange = setQuery,
+                readOnly = keyboardBlocked,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Uri,

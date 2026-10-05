@@ -1,6 +1,6 @@
 /*
 
- * Car Browser ù GPLv3 derivative. See LICENSE.
+ * Car Browser ÔøΩ GPLv3 derivative. See LICENSE.
 
  */
 

@@ -18,8 +18,8 @@ android {
         applicationId = "com.carbrowser.app"
         minSdk = 35
         targetSdk = 37
-        versionCode = 10
-        versionName = "1.0.8"
+        versionCode = 11
+        versionName = "1.0.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -106,7 +106,27 @@ tasks.withType<KotlinJvmCompile>().configureEach {
     }
 }
 
+val localSdkProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+val sdkDirPath = localSdkProps.getProperty("sdk.dir") ?: System.getenv("ANDROID_HOME")
+val androidCarJar = sdkDirPath?.let { path ->
+    val platformsDir = file("$path/platforms")
+    val compileSdkVersion = android.compileSdk.toString()
+    val candidates = listOf(
+        "android-$compileSdkVersion",
+        "android-$compileSdkVersion.0",
+    ) + (platformsDir.listFiles()?.map { it.name }?.sortedDescending().orEmpty())
+    candidates
+        .distinct()
+        .map { platformsDir.resolve(it).resolve("optional/android.car.jar") }
+        .firstOrNull { it.exists() }
+}
+
 dependencies {
+    if (androidCarJar != null) {
+        compileOnly(files(androidCarJar))
+    }
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.ktx)

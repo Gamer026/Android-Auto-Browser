@@ -34,6 +34,8 @@ import com.kododake.aabrowser.model.QuickActionButtonMode
 import com.kododake.aabrowser.model.QuickActionButtonPosition
 import com.kododake.aabrowser.startpage.StartPageManager
 import com.kododake.aabrowser.tabs.TabManager
+import com.kododake.aabrowser.car.CarDrivingUiState
+import com.kododake.aabrowser.car.CarDrivingUxRegistry
 import com.kododake.aabrowser.ui.controllers.FullscreenController
 import com.kododake.aabrowser.ui.controllers.MenuDragGestureHelper
 
@@ -74,7 +76,17 @@ class BrowserUIManager(
     }
 
     fun showTopSearchBar(prefill: String = "", focus: Boolean = true) {
-        topSearchController.show(prefill, focus)
+        val allowFocus = focus && !CarDrivingUxRegistry.keyboardBlocked.value
+        topSearchController.show(prefill, allowFocus)
+    }
+
+    fun applyCarDrivingUxState(state: CarDrivingUiState) {
+        if (state.blockKeyboard) {
+            hideTopSearchBar()
+            if (hasActiveSubScreen()) {
+                hideMenuOverlay()
+            }
+        }
     }
 
     fun hideTopSearchBar() {
